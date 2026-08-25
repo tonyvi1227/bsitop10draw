@@ -22,20 +22,25 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
   }
   const assets: Record<string, HTMLImageElement> = {};
   const cacheBuster = forceReload ? `?t=${Date.now()}` : '';
+  const rawBase = (typeof import.meta !== 'undefined' && (import.meta as any).env && (import.meta as any).env.BASE_URL) || './';
+  const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+
   const assetMap: Record<string, string> = {
-    H1: `/assets/H1.png${cacheBuster}`,
-    H2: `/assets/H2.png${cacheBuster}`,
-    H3: `/assets/H3.png${cacheBuster}`,
-    logo: `/assets/logo.png${cacheBuster}`,
-    TABLE_CAMPAIGNS: `/assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-CAMP-TEMPLATE.png${cacheBuster}`,
-    TABLE_EVENTS: `/assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-EVENT-TEMPLATE.png${cacheBuster}`,
-    TABLE_INFLUENCERS: `/assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
-    TABLE_SHOWS: `/assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-SHOWS-TEMPLATE.png${cacheBuster}`,
-    COMBO_CAMPAIGNS: `/assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
-    COMBO_EVENTS: `/assets/TABLE TEMPLATE/ChartCombo/EVENT.png${cacheBuster}`,
-    COMBO_INFLUENCERS: `/assets/TABLE TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
-    COMBO_SHOWS: `/assets/TABLE TEMPLATE/ChartCombo/SHOW.png${cacheBuster}`,
-    COMBO_TEMPLATE: `/assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
+    H1: `${baseUrl}assets/H1.png${cacheBuster}`,
+    H2: `${baseUrl}assets/H2.png${cacheBuster}`,
+    H3: `${baseUrl}assets/H3.png${cacheBuster}`,
+    logo: `${baseUrl}assets/logo.png${cacheBuster}`,
+    TABLE_CAMPAIGNS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-CAMP-TEMPLATE.png${cacheBuster}`,
+    TABLE_EVENTS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-EVENT-TEMPLATE.png${cacheBuster}`,
+    TABLE_INFLUENCERS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
+    TABLE_CELEBS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
+    TABLE_SHOWS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-SHOWS-TEMPLATE.png${cacheBuster}`,
+    COMBO_CAMPAIGNS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
+    COMBO_EVENTS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/EVENT.png${cacheBuster}`,
+    COMBO_INFLUENCERS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
+    COMBO_CELEBS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
+    COMBO_SHOWS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/SHOW.png${cacheBuster}`,
+    COMBO_TEMPLATE: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
   };
 
   const promises = Object.entries(assetMap).map(([name, url]) => {
@@ -46,7 +51,8 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
         assets[name] = img;
         resolve();
       };
-      img.onerror = () => {
+      img.onerror = (e) => {
+        console.error(`Failed to load template asset: ${name} from ${url}`, e);
         resolve();
       };
       img.src = url;
@@ -821,7 +827,10 @@ function renderTableFormat(
   const engMonth = getEnglishMonth(monthStr);
 
   const templateKey = `TABLE_${metadata.category}`;
-  const templateImg = templateAssets ? templateAssets[templateKey] : undefined;
+  let templateImg = templateAssets ? templateAssets[templateKey] : undefined;
+  if (!templateImg && templateAssets) {
+    templateImg = templateAssets.TABLE_CAMPAIGNS || templateAssets.TABLE_INFLUENCERS || templateAssets.TABLE_EVENTS || templateAssets.TABLE_SHOWS;
+  }
 
   if (templateImg) {
     ctx.drawImage(templateImg, 0, 0, 4000, 2099);
