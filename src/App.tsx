@@ -8,6 +8,8 @@ import { QCStudio } from './components/studio/QCStudio';
 import { UserGuide } from './components/studio/UserGuide';
 import { Database, Sparkles, ShieldCheck, BookOpen } from 'lucide-react';
 
+import { autoMatchCachedAvatars } from './utils/avatarCache';
+
 export const App: React.FC = () => {
   const [mainMode, setMainMode] = useState<'DATA_STUDIO' | 'GRAPHIC_STUDIO' | 'QC_STUDIO' | 'GUIDE'>('DATA_STUDIO');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
@@ -28,6 +30,24 @@ export const App: React.FC = () => {
     SHOWS: SAMPLE_DATA.SHOWS,
     INFLUENCERS: SAMPLE_DATA.INFLUENCERS,
   });
+
+  // Auto match cached avatars from IndexedDB on initial mount
+  React.useEffect(() => {
+    const initCache = async () => {
+      const categories: CategoryType[] = ['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'];
+      const updatedStore: Record<CategoryType, BsiItem[]> = { ...categoryDataStore };
+
+      for (const cat of categories) {
+        if (updatedStore[cat]) {
+          updatedStore[cat] = await autoMatchCachedAvatars(updatedStore[cat]);
+        }
+      }
+
+      setCategoryDataStore(updatedStore);
+    };
+
+    initCache();
+  }, []);
 
   const activeItems = categoryDataStore[metadata.category] || [];
 

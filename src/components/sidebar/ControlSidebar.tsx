@@ -4,6 +4,7 @@ import { CATEGORY_CONFIG } from '../../constants/branding';
 import { ExcelUpload } from '../upload/ExcelUpload';
 import { BulkImageUpload } from '../upload/BulkImageUpload';
 import { ImageCropperModal } from '../cropper/ImageCropperModal';
+import { saveAvatarToCache } from '../../utils/avatarCache';
 import { BarChart3, Table, Layers, Calendar, Image as ImageIcon, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, UploadCloud, Crop } from 'lucide-react';
 
 interface ControlSidebarProps {
@@ -52,6 +53,13 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
       if (e.target?.result) {
         const dataUrl = e.target.result as string;
         handleItemChange(index, 'croppedImageData', dataUrl);
+
+        const targetItem = items[index];
+        if (targetItem) {
+          if (targetItem.name) saveAvatarToCache(targetItem.name, dataUrl);
+          if (targetItem.brandName) saveAvatarToCache(targetItem.brandName, dataUrl);
+        }
+
         setCropperState({
           isOpen: true,
           imageSrc: dataUrl,
@@ -65,6 +73,11 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
 
   const handleApplyCrop = (croppedBase64: string) => {
     handleItemChange(cropperState.rankIndex, 'croppedImageData', croppedBase64);
+    const targetItem = items[cropperState.rankIndex];
+    if (targetItem) {
+      if (targetItem.name) saveAvatarToCache(targetItem.name, croppedBase64);
+      if (targetItem.brandName) saveAvatarToCache(targetItem.brandName, croppedBase64);
+    }
   };
 
   return (

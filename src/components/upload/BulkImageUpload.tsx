@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { BsiItem } from '../../types/bsi';
 import { UploadCloud, Image as ImageIcon, Crop, Trash2 } from 'lucide-react';
 import { ImageCropperModal } from '../cropper/ImageCropperModal';
+import { saveAvatarToCache } from '../../utils/avatarCache';
 
 interface BulkImageUploadProps {
   items: BsiItem[];
@@ -40,6 +41,14 @@ export const BulkImageUpload: React.FC<BulkImageUploadProps> = ({ items, setItem
             };
             setItems([...updated]);
 
+            // Save to avatar cache
+            if (updated[idx].name) {
+              saveAvatarToCache(updated[idx].name, dataUrl);
+            }
+            if (updated[idx].brandName) {
+              saveAvatarToCache(updated[idx].brandName, dataUrl);
+            }
+
             // Automatically open cropper modal for the first uploaded file immediately
             if (idx === 0) {
               setCropperState({
@@ -71,10 +80,17 @@ export const BulkImageUpload: React.FC<BulkImageUploadProps> = ({ items, setItem
 
   const handleApplyCrop = (croppedBase64: string) => {
     const updated = [...items];
-    updated[cropperState.rankIndex] = {
-      ...updated[cropperState.rankIndex],
-      croppedImageData: croppedBase64,
-    };
+    const targetItem = updated[cropperState.rankIndex];
+
+    if (targetItem) {
+      targetItem.croppedImageData = croppedBase64;
+      if (targetItem.name) {
+        saveAvatarToCache(targetItem.name, croppedBase64);
+      }
+      if (targetItem.brandName) {
+        saveAvatarToCache(targetItem.brandName, croppedBase64);
+      }
+    }
     setItems(updated);
   };
 

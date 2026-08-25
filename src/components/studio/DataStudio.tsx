@@ -6,6 +6,7 @@ import {
 } from '../../utils/excelParser';
 import { BulkImageUpload } from '../upload/BulkImageUpload';
 import { ImageCropperModal } from '../cropper/ImageCropperModal';
+import { autoMatchCachedAvatars, saveAvatarToCache } from '../../utils/avatarCache';
 import {
   Link2,
   RefreshCw,
@@ -111,6 +112,14 @@ export const DataStudio: React.FC<DataStudioProps> = ({
   };
 
   const handleApplyRowCrop = (croppedBase64: string) => {
+    const targetItem = currentItems[cropperState.rankIndex];
+    if (targetItem) {
+      saveAvatarToCache(targetItem.name, croppedBase64);
+      if (targetItem.brandName) {
+        saveAvatarToCache(targetItem.brandName, croppedBase64);
+      }
+    }
+
     setCategoryDataStore((prevStore) => {
       const activeCat = metadata.category;
       const updatedList = [...(prevStore[activeCat] || [])];
@@ -171,12 +180,20 @@ export const DataStudio: React.FC<DataStudioProps> = ({
           message: `Không tìm thấy số liệu cho Tháng ${targetMonth}/${targetYear} trên Google Sheet.`,
         });
       } else {
+        // Auto match cached avatars for all parsed categories
+        const autoMatchedParsed: Partial<Record<CategoryType, BsiItem[]>> = {};
+        for (const cat of syncedCategories) {
+          if (allParsed[cat]) {
+            autoMatchedParsed[cat] = await autoMatchCachedAvatars(allParsed[cat]!);
+          }
+        }
+
         setCategoryDataStore((prev) => ({
           ...prev,
-          ...allParsed,
+          ...autoMatchedParsed,
         }));
 
-        const countsStr = Object.entries(allParsed)
+        const countsStr = Object.entries(autoMatchedParsed)
           .map(([cat, items]) => `${cat}: ${items?.length || 0}`)
           .join(', ');
 
