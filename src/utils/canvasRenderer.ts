@@ -728,25 +728,24 @@ function renderChartFormat(
     drawRoundedRect(ctx, barX, barY, barWidth, displayBarH, { tl: Math.min(barRadius, displayBarH / 2), tr: Math.min(barRadius, displayBarH / 2), br: 0, bl: 0 });
     ctx.fill();
 
-    // 5. SỐ ĐIỂM BSI (Font: Inter Weight 800)
+    // 5. SỐ ĐIỂM BSI (Font: Inter 36px)
     ctx.save();
+    ctx.font = '800 36px "Inter", "SVN-Mont", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
     let avatarY: number;
 
     if (rawBarH >= 87) {
-      ctx.font = '800 32px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY + displayBarH - 14);
-      avatarY = barY - avatarRadius - 20;
+      avatarY = barY - avatarRadius - 32;
     } else {
-      ctx.font = '800 28px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY - 6);
-      avatarY = barY - avatarRadius - 58;
+      ctx.fillText(scoreStr, centerX, barY - 8);
+      avatarY = barY - avatarRadius - 76;
     }
     ctx.restore();
 
@@ -1218,23 +1217,22 @@ function renderCombinationFormat(
     ctx.fill();
 
     ctx.save();
+    ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
     let avatarY: number;
 
     if (rawBarH >= 74) {
-      ctx.font = 'bold 30px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY + displayBarH - 12);
-      avatarY = barY - avatarRadius - 20;
+      ctx.fillText(scoreStr, centerX, barY + displayBarH - 14);
+      avatarY = barY - avatarRadius - 32;
     } else {
-      ctx.font = 'bold 28px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY - 6);
-      avatarY = barY - avatarRadius - 58;
+      ctx.fillText(scoreStr, centerX, barY - 8);
+      avatarY = barY - avatarRadius - 76;
     }
     ctx.restore();
 
