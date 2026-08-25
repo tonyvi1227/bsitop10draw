@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BsiItem, BsiReportMetadata, CategoryType } from '../../types/bsi';
 import {
   fetchGoogleSheetsAllTabsLive,
@@ -15,7 +15,6 @@ import {
   AlertTriangle,
   Calendar,
   Sparkles,
-  Image as ImageIcon,
   Check,
   UploadCloud,
   Trash2,
@@ -29,7 +28,7 @@ interface DataStudioProps {
   setMetadata: React.Dispatch<React.SetStateAction<BsiReportMetadata>>;
   categoryDataStore: Record<CategoryType, BsiItem[]>;
   setCategoryDataStore: React.Dispatch<React.SetStateAction<Record<CategoryType, BsiItem[]>>>;
-  onNavigateToGraphic: () => void;
+  onNavigateToGraphic?: () => void;
 }
 
 export const DataStudio: React.FC<DataStudioProps> = ({
@@ -148,28 +147,28 @@ export const DataStudio: React.FC<DataStudioProps> = ({
     });
   };
 
-  // Fetch Live Google Sheet Data for ALL 4 Categories (Campaigns, Celebs, Events, Shows) for Month/Year
-  const handleFetchGoogleSheet = async () => {
+  // Fetch Live Google Sheet Data for target Month & Year
+  const handleFetchGoogleSheetWithMonthYear = async (targetMonth: string, targetYear: string) => {
     if (!gsheetUrl.trim()) return;
 
     setIsFetchingSheet(true);
     setSyncStatus({
       type: 'info',
-      message: `Đang đồng bộ dữ liệu cả 4 Hạng Mục cho tháng ${metadata.month}/${metadata.year}...`,
+      message: `Đang đồng bộ dữ liệu cả 4 Hạng Mục cho tháng ${targetMonth}/${targetYear}...`,
     });
 
     try {
       localStorage.setItem('BSI_GSHEET_URL', gsheetUrl.trim());
       const { allParsed, syncedCategories } = await fetchGoogleSheetsAllTabsLive(
         gsheetUrl.trim(),
-        metadata.month,
-        metadata.year
+        targetMonth,
+        targetYear
       );
 
       if (syncedCategories.length === 0) {
         setSyncStatus({
           type: 'error',
-          message: `Không tìm thấy số liệu cho Tháng ${metadata.month}/${metadata.year} trên các tab của Google Sheet.`,
+          message: `Không tìm thấy số liệu cho Tháng ${targetMonth}/${targetYear} trên Google Sheet.`,
         });
       } else {
         setCategoryDataStore((prev) => ({
@@ -183,7 +182,7 @@ export const DataStudio: React.FC<DataStudioProps> = ({
 
         setSyncStatus({
           type: 'success',
-          message: `Đã đồng bộ dữ liệu thành công ${syncedCategories.length} Hạng Mục cho Tháng ${metadata.month}/${metadata.year}! (${countsStr})`,
+          message: `Đã đồng bộ dữ liệu thành công ${syncedCategories.length} Hạng Mục cho Tháng ${targetMonth}/${targetYear}! (${countsStr})`,
         });
       }
     } catch (err: any) {
@@ -197,12 +196,43 @@ export const DataStudio: React.FC<DataStudioProps> = ({
     }
   };
 
+  const handleFetchGoogleSheet = () => {
+    handleFetchGoogleSheetWithMonthYear(metadata.month, metadata.year);
+  };
+
+  const handleMonthSelect = (newMonth: string) => {
+    setMetadata((prev) => ({ ...prev, month: newMonth }));
+    handleFetchGoogleSheetWithMonthYear(newMonth, metadata.year);
+  };
+
+  const handleYearSelect = (newYear: string) => {
+    setMetadata((prev) => ({ ...prev, year: newYear }));
+    handleFetchGoogleSheetWithMonthYear(metadata.month, newYear);
+  };
+
   const categoryLabels: Record<CategoryType, string> = {
     CAMPAIGNS: 'Campaigns',
     INFLUENCERS: 'Celebs',
     EVENTS: 'Events',
     SHOWS: 'Shows',
   };
+
+  const monthOptions = [
+    { val: '01', label: 'Tháng 01 (Jan)' },
+    { val: '02', label: 'Tháng 02 (Feb)' },
+    { val: '03', label: 'Tháng 03 (Mar)' },
+    { val: '04', label: 'Tháng 04 (Apr)' },
+    { val: '05', label: 'Tháng 05 (May)' },
+    { val: '06', label: 'Tháng 06 (Jun)' },
+    { val: '07', label: 'Tháng 07 (Jul)' },
+    { val: '08', label: 'Tháng 08 (Aug)' },
+    { val: '09', label: 'Tháng 09 (Sep)' },
+    { val: '10', label: 'Tháng 10 (Oct)' },
+    { val: '11', label: 'Tháng 11 (Nov)' },
+    { val: '12', label: 'Tháng 12 (Dec)' },
+  ];
+
+  const yearOptions = ['2024', '2025', '2026', '2027', '2028'];
 
   return (
     <div className="flex-1 h-full overflow-y-auto bg-slate-950 p-6 lg:p-8 space-y-6 select-none">
@@ -312,26 +342,42 @@ export const DataStudio: React.FC<DataStudioProps> = ({
             ))}
           </div>
 
-          {/* Month / Year inputs & Bulk Upload */}
+          {/* Month / Year Dropdowns & Bulk Upload */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1">
-              <Calendar className="w-3.5 h-3.5 text-buzz-orange shrink-0" />
-              <span className="text-[11px] text-slate-400 font-medium">Tháng:</span>
-              <input
-                type="text"
-                value={metadata.month}
-                onChange={(e) => setMetadata((prev) => ({ ...prev, month: e.target.value }))}
-                className="w-8 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
-                placeholder="06"
-              />
-              <span className="text-[11px] text-slate-400 font-medium ml-1">Năm:</span>
-              <input
-                type="text"
-                value={metadata.year}
-                onChange={(e) => setMetadata((prev) => ({ ...prev, year: e.target.value }))}
-                className="w-12 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
-                placeholder="2026"
-              />
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5">
+              <Calendar className="w-4 h-4 text-buzz-orange shrink-0" />
+              
+              {/* Month Dropdown Select */}
+              <div className="flex items-center gap-1">
+                <span className="text-xs text-slate-400 font-medium">Tháng:</span>
+                <select
+                  value={metadata.month}
+                  onChange={(e) => handleMonthSelect(e.target.value)}
+                  className="bg-slate-950 text-white font-bold text-xs border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-buzz-orange cursor-pointer"
+                >
+                  {monthOptions.map((opt) => (
+                    <option key={opt.val} value={opt.val}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year Dropdown Select */}
+              <div className="flex items-center gap-1 ml-2">
+                <span className="text-xs text-slate-400 font-medium">Năm:</span>
+                <select
+                  value={metadata.year}
+                  onChange={(e) => handleYearSelect(e.target.value)}
+                  className="bg-slate-950 text-white font-bold text-xs border border-slate-700 rounded-lg px-2 py-1 focus:outline-none focus:border-buzz-orange cursor-pointer"
+                >
+                  {yearOptions.map((yr) => (
+                    <option key={yr} value={yr}>
+                      {yr}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <button
@@ -373,77 +419,101 @@ export const DataStudio: React.FC<DataStudioProps> = ({
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/60 text-xs font-semibold">
-              {currentItems.map((item, idx) => (
-                <tr key={idx} className="hover:bg-slate-800/40 transition">
-                  <td className="py-3 px-4 text-center">
-                    <span className="w-6 h-6 rounded-full bg-buzz-orange/20 text-buzz-orange font-extrabold text-xs inline-flex items-center justify-center border border-buzz-orange/40">
-                      {item.rank}
-                    </span>
-                  </td>
-                  {metadata.category === 'CAMPAIGNS' && (
-                    <td className="py-3 px-4 text-slate-300 font-medium">{item.brandName || '-'}</td>
-                  )}
-                  <td className="py-3 px-4 text-white">{item.name}</td>
-                  <td className="py-3 px-4 text-right text-buzz-orange font-bold">
-                    {item.bsiScore.toLocaleString('en-US')}
-                  </td>
-                  <td className="py-3 px-4 text-right text-sky-400 font-bold">
-                    {item.contentFromQu.toLocaleString('en-US')}
-                  </td>
-                  <td className="py-3 px-4 text-right text-slate-300">
-                    {item.buzzVolume.toLocaleString('en-US')}
-                  </td>
-                  <td className="py-3 px-4 text-right text-slate-300">
-                    {item.qualifiedUser.toLocaleString('en-US')}
-                  </td>
-                  <td className="py-3 px-4 text-right text-slate-300">
-                    {item.sentimentScore.toFixed(2)}
-                  </td>
-                  <td className="py-3 px-4 text-right text-slate-300">
-                    {item.earnedMedia.toFixed(1)}%
-                  </td>
-                  <td className="py-2.5 px-4 text-center">
-                    {item.croppedImageData || item.imageUrl ? (
-                      <div className="flex items-center justify-center gap-1.5">
-                        <img
-                          src={item.croppedImageData || item.imageUrl}
-                          alt={item.name}
-                          className="w-8 h-8 rounded-full object-cover border-2 border-buzz-orange/80 shadow-md shrink-0 bg-slate-900 cursor-pointer hover:opacity-80 transition"
-                          onClick={() => {
-                            const src = item.croppedImageData || item.imageUrl;
-                            if (src) {
-                              setCropperState({
-                                isOpen: true,
-                                imageSrc: src,
-                                rankIndex: idx,
-                                rankName: `Top ${item.rank} - ${item.name}`,
-                              });
-                            }
-                          }}
-                          title="Click để Crop & Scale ảnh"
-                        />
-                        <button
-                          onClick={() => {
-                            const src = item.croppedImageData || item.imageUrl;
-                            if (src) {
-                              setCropperState({
-                                isOpen: true,
-                                imageSrc: src,
-                                rankIndex: idx,
-                                rankName: `Top ${item.rank} - ${item.name}`,
-                              });
-                            }
-                          }}
-                          className="p-1 hover:bg-slate-800 text-buzz-orange rounded transition"
-                          title="Crop & Scale vị trí ảnh"
-                        >
-                          <Crop className="w-3.5 h-3.5" />
-                        </button>
-                        <label
-                          className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded cursor-pointer transition"
-                          title="Đổi ảnh avatar"
-                        >
-                          <UploadCloud className="w-3.5 h-3.5 text-buzz-orange" />
+              {currentItems.length > 0 ? (
+                currentItems.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-slate-800/40 transition">
+                    <td className="py-3 px-4 text-center">
+                      <span className="w-6 h-6 rounded-full bg-buzz-orange/20 text-buzz-orange font-extrabold text-xs inline-flex items-center justify-center border border-buzz-orange/40">
+                        {item.rank}
+                      </span>
+                    </td>
+                    {metadata.category === 'CAMPAIGNS' && (
+                      <td className="py-3 px-4 text-slate-300 font-medium">{item.brandName || '-'}</td>
+                    )}
+                    <td className="py-3 px-4 text-white">{item.name}</td>
+                    <td className="py-3 px-4 text-right text-buzz-orange font-bold">
+                      {item.bsiScore.toLocaleString('en-US')}
+                    </td>
+                    <td className="py-3 px-4 text-right text-sky-400 font-bold">
+                      {item.contentFromQu.toLocaleString('en-US')}
+                    </td>
+                    <td className="py-3 px-4 text-right text-slate-300">
+                      {item.buzzVolume.toLocaleString('en-US')}
+                    </td>
+                    <td className="py-3 px-4 text-right text-slate-300">
+                      {item.qualifiedUser.toLocaleString('en-US')}
+                    </td>
+                    <td className="py-3 px-4 text-right text-slate-300">
+                      {item.sentimentScore.toFixed(2)}
+                    </td>
+                    <td className="py-3 px-4 text-right text-slate-300">
+                      {item.earnedMedia.toFixed(1)}%
+                    </td>
+                    <td className="py-2.5 px-4 text-center">
+                      {item.croppedImageData || item.imageUrl ? (
+                        <div className="flex items-center justify-center gap-1.5">
+                          <img
+                            src={item.croppedImageData || item.imageUrl}
+                            alt={item.name}
+                            className="w-8 h-8 rounded-full object-cover border-2 border-buzz-orange/80 shadow-md shrink-0 bg-slate-900 cursor-pointer hover:opacity-80 transition"
+                            onClick={() => {
+                              const src = item.croppedImageData || item.imageUrl;
+                              if (src) {
+                                setCropperState({
+                                  isOpen: true,
+                                  imageSrc: src,
+                                  rankIndex: idx,
+                                  rankName: `Top ${item.rank} - ${item.name}`,
+                                });
+                              }
+                            }}
+                            title="Click để Crop & Scale ảnh"
+                          />
+                          <button
+                            onClick={() => {
+                              const src = item.croppedImageData || item.imageUrl;
+                              if (src) {
+                                setCropperState({
+                                  isOpen: true,
+                                  imageSrc: src,
+                                  rankIndex: idx,
+                                  rankName: `Top ${item.rank} - ${item.name}`,
+                                });
+                              }
+                            }}
+                            className="p-1 hover:bg-slate-800 text-buzz-orange rounded transition"
+                            title="Crop & Scale vị trí ảnh"
+                          >
+                            <Crop className="w-3.5 h-3.5" />
+                          </button>
+                          <label
+                            className="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded cursor-pointer transition"
+                            title="Đổi ảnh avatar"
+                          >
+                            <UploadCloud className="w-3.5 h-3.5 text-buzz-orange" />
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleRowImageUpload(idx, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
+                          <button
+                            onClick={() => handleRemoveRowImage(idx)}
+                            className="p-1 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 rounded transition"
+                            title="Xóa ảnh"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-buzz-orange/20 hover:bg-buzz-orange/30 text-buzz-orange border border-buzz-orange/40 text-[11px] font-bold cursor-pointer transition active:scale-95">
+                          <UploadCloud className="w-3.5 h-3.5" />
+                          <span>Upload Ảnh</span>
                           <input
                             type="file"
                             accept="image/*"
@@ -455,33 +525,17 @@ export const DataStudio: React.FC<DataStudioProps> = ({
                             }}
                           />
                         </label>
-                        <button
-                          onClick={() => handleRemoveRowImage(idx)}
-                          className="p-1 hover:bg-rose-950/60 text-slate-400 hover:text-rose-400 rounded transition"
-                          title="Xóa ảnh"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-buzz-orange/20 hover:bg-buzz-orange/30 text-buzz-orange border border-buzz-orange/40 text-[11px] font-bold cursor-pointer transition active:scale-95">
-                        <UploadCloud className="w-3.5 h-3.5" />
-                        <span>Upload Ảnh</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              handleRowImageUpload(idx, e.target.files[0]);
-                            }
-                          }}
-                        />
-                      </label>
-                    )}
+                      )}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={10} className="py-8 text-center text-slate-400 text-xs">
+                    Chưa có số liệu cho {categoryLabels[metadata.category]} (Tháng {metadata.month}/{metadata.year}). Hãy chọn Tháng/Năm hoặc bấm [Đồng bộ dữ liệu].
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

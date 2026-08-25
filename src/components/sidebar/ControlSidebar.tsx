@@ -182,23 +182,44 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <span className="text-[11px] text-slate-400 block mb-1">Tháng (MM)</span>
-                  <input
-                    type="text"
+                  <select
                     value={metadata.month}
                     onChange={(e) => setMetadata((prev) => ({ ...prev, month: e.target.value }))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-buzz-orange font-semibold text-center"
-                    placeholder="06"
-                  />
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-buzz-orange font-semibold cursor-pointer"
+                  >
+                    {[
+                      { val: '01', label: 'Tháng 01 (Jan)' },
+                      { val: '02', label: 'Tháng 02 (Feb)' },
+                      { val: '03', label: 'Tháng 03 (Mar)' },
+                      { val: '04', label: 'Tháng 04 (Apr)' },
+                      { val: '05', label: 'Tháng 05 (May)' },
+                      { val: '06', label: 'Tháng 06 (Jun)' },
+                      { val: '07', label: 'Tháng 07 (Jul)' },
+                      { val: '08', label: 'Tháng 08 (Aug)' },
+                      { val: '09', label: 'Tháng 09 (Sep)' },
+                      { val: '10', label: 'Tháng 10 (Oct)' },
+                      { val: '11', label: 'Tháng 11 (Nov)' },
+                      { val: '12', label: 'Tháng 12 (Dec)' },
+                    ].map((opt) => (
+                      <option key={opt.val} value={opt.val}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-400 block mb-1">Năm (YYYY)</span>
-                  <input
-                    type="text"
+                  <select
                     value={metadata.year}
                     onChange={(e) => setMetadata((prev) => ({ ...prev, year: e.target.value }))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-buzz-orange font-semibold text-center"
-                    placeholder="2026"
-                  />
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-buzz-orange font-semibold cursor-pointer"
+                  >
+                    {['2024', '2025', '2026', '2027', '2028'].map((yr) => (
+                      <option key={yr} value={yr}>
+                        {yr}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
