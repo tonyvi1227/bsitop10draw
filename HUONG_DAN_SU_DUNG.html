@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hướng Dẫn Cài Đặt & Sử Dụng - Buzzmetrics BSI TOP10 Studio</title>
+  <style>
+    :root {
+      --bg-dark: #030712;
+      --panel-bg: #0f172a;
+      --card-bg: #1e293b;
+      --border-color: #334155;
+      --orange-buzz: #e96825;
+      --orange-light: #ff7e36;
+      --emerald: #10b981;
+      --sky: #38bdf8;
+      --text-white: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      line-height: 1.6;
+      padding: 30px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-badge {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, var(--orange-buzz), var(--orange-light));
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 22px;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(233, 104, 37, 0.4);
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 24px;
+      color: var(--text-white);
+      margin-bottom: 6px;
+    }
+
+    header p {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .tag {
+      display: inline-block;
+      background: rgba(233, 104, 37, 0.2);
+      color: var(--orange-buzz);
+      border: 1px solid rgba(233, 104, 37, 0.4);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 10px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background-color: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 26px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-white);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-box {
+      width: 32px;
+      height: 32px;
+      background: rgba(233, 104, 37, 0.15);
+      color: var(--orange-buzz);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .steps-list {
+      list-style: none;
+      counter-reset: step-counter;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .steps-list li {
+      counter-increment: step-counter;
+      position: relative;
+      padding-left: 48px;
+      font-size: 14px;
+      color: #cbd5e1;
+    }
+
+    .steps-list li::before {
+      content: counter(step-counter);
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 32px;
+      height: 32px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--orange-buzz);
+      font-weight: 800;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    code {
+      background-color: #090d16;
+      border: 1px solid #1e293b;
+      color: var(--sky);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+    }
+
+    .code-block {
+      background-color: #020617;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+
+    .tabs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .tab-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .tab-card h4 {
+      font-size: 14px;
+      color: var(--orange-buzz);
+      margin-bottom: 6px;
+    }
+
+    .tab-card p {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      font-size: 13px;
+    }
+
+    th, td {
+      border: 1px solid var(--border-color);
+      padding: 10px 14px;
+      text-align: left;
+    }
+
+    th {
+      background-color: var(--card-bg);
+      color: var(--orange-buzz);
+      font-weight: 700;
+    }
+
+    td {
+      background-color: rgba(15, 23, 42, 0.6);
+      color: #cbd5e1;
+    }
+
+    .alert {
+      background-color: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      color: #34d399;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-top: 14px;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="logo-badge">BSI</div>
+      <div>
+        <h1>Buzzmetrics BSI TOP10 Studio <span class="tag">VER 2026.2 RELEASE</span></h1>
+        <p>Hướng dẫn cài đặt package, khởi động môi trường & quy trình vận hành đồ họa tự động BSI Top10</p>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Section 1: Quick Setup -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon-box">1</div>
+          Hướng Dẫn Khởi Động Package Trên Máy Mới (Quick Setup Guide)
+        </div>
+        
+        <ol class="steps-list">
+          <li>
+            <strong>Chuẩn bị môi trường cài đặt:</strong><br>
+            Đảm bảo máy tính đã cài đặt <code>Node.js</code> (Phiên bản v18 hoặc v20+).<br>
+            <em>(Nếu chưa có Node.js, tải bản LST miễn phí tại: <a href="https://nodejs.org/" target="_blank" style="color:var(--sky);">https://nodejs.org</a>)</em>
+          </li>
+
+          <li>
+            <strong>Giải nén file ZIP dự án:</strong><br>
+            Giải nén file <code>BSITOP10_Studio_Release.zip</code> vào một thư mục làm việc bất kỳ trên máy tính của bạn.
+          </li>
+
+          <li>
+            <strong>Cài đặt các gói thư viện (NPM Install):</strong><br>
+            Mở chương trình <strong>Terminal / Command Prompt (CMD) / PowerShell</strong> tại thư mục vừa giải nén và gõ lệnh:
+            <div class="code-block">npm install</div>
+            <em>(Hệ thống sẽ tự động tải các thư viện React, TypeScript, Vite & Canvas rendering trong khoảng 30 - 60 giây).</em>
+          </li>
+
+          <li>
+            <strong>Khởi chạy phần mềm (npm run dev):</strong><br>
+            Sau khi nạp xong thư viện, gõ lệnh bên dưới để chạy ứng dụng:
+            <div class="code-block">npm run dev</div>
+            Ứng dụng sẽ tự động mở giao diện điều khiển trên trình duyệt tại đường dẫn:
+            <div class="code-block">http://localhost:5173/</div>
+          </li>
+        </ol>
+
+        <div class="alert">
+          💡 <strong>Mẹo nhỏ:</strong> Trong quá trình sử dụng, bạn có thể bấm phím <code>Ctrl + C</code> trong cửa sổ CMD để ngắt ứng dụng khi hoàn thành công việc.
+        </div>
+      </div>
+
+      <!-- Section 2: App Overview -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon-box">2</div>
+          Cấu Trúc 4 Tab Quản Lý Trong Phần Mềm
+        </div>
+
+        <div class="tabs-grid">
+          <div class="tab-card">
+            <h4>1. Nhập Liệu Data</h4>
+            <p>Đồng bộ dữ liệu Live từ Google Sheet (quét cả 4 tab song song), hoặc nạp file Excel 4 sheet + upload 10 Logo avatar cùng lúc.</p>
+          </div>
+          <div class="tab-card">
+            <h4>2. Graphic Studio</h4>
+            <p>Xem preview đồ họa Canvas thời gian thực, chuyển đổi 3 Format (Chart/Table/Combo), nhập tên và gõ phím <code>Enter</code> ngắt dòng chủ động.</p>
+          </div>
+          <div class="tab-card">
+            <h4>3. QC và Xuất Ảnh</h4>
+            <p>Đối chiếu Bảng Data Live Inspector trực tiếp với tấm ảnh 4K render thực tế, xuất 1 file PNG hoặc nén trọn bộ 12 ảnh ZIP chỉ 1 click.</p>
+          </div>
+          <div class="tab-card">
+            <h4>4. Hướng Dẫn</h4>
+            <p>Xem tài liệu hướng dẫn tích hợp sẵn, tra cứu các quy tắc ngắt dòng, chuẩn hóa dữ liệu Google Sheet và câu hỏi FAQ.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Google Sheet Structure -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon-box">3</div>
+          Cấu Trúc File Google Sheet / Excel Chuẩn
+        </div>
+
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">
+          Để tính năng đồng bộ tự động hoạt động chuẩn xác 100%, file Google Sheet cần mở quyền <strong>"Anyone with the link can view"</strong> và có đúng tên 4 Tab sau:
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Tên Tab Bắt Buộc</th>
+              <th>Hạng Mục Quản Lý</th>
+              <th>Cột Bắt Buộc Phải Có</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>QU Campaigns</code></td>
+              <td>Top 10 Chiến Dịch (Campaigns)</td>
+              <td><code>Year</code>, <code>Month</code>, <code>Brands</code>, <code>Campaigns</code>, <code>BSI Real</code>, <code>Content from QU</code></td>
+            </tr>
+            <tr>
+              <td><code>QU Events</code></td>
+              <td>Top 10 Sự Kiện (Events)</td>
+              <td><code>Year</code>, <code>Month</code>, <code>Events</code> (hoặc <code>Name</code>), <code>BSI Real</code>, <code>Content from QU</code></td>
+            </tr>
+            <tr>
+              <td><code>QU Shows</code></td>
+              <td>Top 10 Chương Trình (Shows)</td>
+              <td><code>Year</code>, <code>Month</code>, <code>Shows</code> (hoặc <code>Name</code>), <code>BSI Real</code>, <code>Content from QU</code></td>
+            </tr>
+            <tr>
+              <td><code>QU Celebs</code></td>
+              <td>Top 10 Người Ảnh Hưởng (Celebs)</td>
+              <td><code>Year</code>, <code>Month</code>, <code>Celebs</code> (hoặc <code>Name</code>), <code>BSI Real</code>, <code>Content from QU</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Section 4: Key Features & Rules -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon-box">4</div>
+          Các Quy Tắc Đồ Họa Cần Biết (Key Rules & Features)
+        </div>
+
+        <ul style="list-style: square; padding-left: 20px; font-size: 13px; color: #cbd5e1; line-height: 1.8;">
+          <li><strong>Ngắt dòng bằng phím Enter:</strong> Tại Bước 2 (Graphic Studio), khi gõ tên đối tượng trong Side panel bên trái, bạn có thể nhấn phím <code>Enter</code> để ngắt dòng chủ động chuẩn xác theo ý muốn.</li>
+          <li><strong>Font chữ 32px / 30px cố định:</strong> Hệ thống tự động áp dụng cỡ chữ đồng nhất trên toàn bộ 10 đối tượng, không bị hiện tượng chữ to chữ nhỏ. Khi có tên dài ngắt 5-6 dòng, cỡ chữ tự động hạ xuống 30px và đẩy cột chart lên trên để đảm bảo tuyệt đối không tràn viền.</li>
+          <li><strong>Bảng Combo Trendline Solid Nodes:</strong> Các điểm data nodes trên đường trendline của bảng Combo được hiển thị dạng Solid Orange Fill (cam nguyên khối <code>#E96825</code>).</li>
+          <li><strong>Xuất file ZIP 12 ảnh tự động:</strong> Tại Bước 3 (QC và Xuất Ảnh), bấm <code>[ Tải Trọn Bộ 12 Ảnh (ZIP) ]</code> để hệ thống tự động render đủ 4 Hạng mục × 3 Format và đóng gói file ZIP tải về máy.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+      Buzzmetrics Social Index (BSI) TOP10 Studio &copy; 2026. Hướng dẫn sử dụng đính kèm Package.
+    </footer>
+  </div>
+</body>
+</html>

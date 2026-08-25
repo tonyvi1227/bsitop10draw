@@ -1,0 +1,153 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ----------------------------------------------------
+   SVN-Jeko Official Font Declarations
+---------------------------------------------------- */
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Jeko';
+  src: url('/fonts/SVN-Jeko-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ----------------------------------------------------
+   SVN-Mont Official Font Declarations
+---------------------------------------------------- */
+@font-face {
+  font-family: 'SVN-Mont';
+  src: url('/fonts/SVN-MONT REGULAR.OTF') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Mont';
+  src: url('/fonts/SVN-MONT SEMIBOLD.OTF') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Mont';
+  src: url('/fonts/SVN-MONT BOLD.OTF') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Mont';
+  src: url('/fonts/SVN-MONT HEAVY.OTF') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SVN-Mont';
+  src: url('/fonts/SVN-MONT BLACK.OTF') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --color-buzz-orange: #E68228;
+  --color-buzz-light-orange: #E69650;
+  --color-buzz-sandy-orange: #FABE8C;
+  --color-buzz-dark-blue: #125876;
+  --color-buzz-grey: #969696;
+  --color-buzz-dark-grey: #5F5F5F;
+  --color-buzz-deep-grey: #333333;
+}
+
+body {
+  margin: 0;
+  background-color: #0F172A;
+  color: #F8FAFC;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Glassmorphism utility classes */
+.glass-panel {
+  background: rgba(30, 41, 59, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(230, 130, 40, 0.2);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: #E68228;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #E69650;
+}
+
+/* Disable HTML5 number input spinner buttons to force direct typing */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
