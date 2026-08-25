@@ -207,6 +207,16 @@ function wrapText(
   if (!text) return [];
 
   const cleaned = cleanTextSpaces(text);
+
+  // If text contains explicit newlines '\n' (from Excel Alt+Enter), handle line breaks
+  if (cleaned.includes('\n')) {
+    const manualLines = cleaned
+      .split('\n')
+      .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+      .filter(Boolean);
+    return manualLines.slice(0, maxLines);
+  }
+
   const words = cleaned.split(/\s+/);
   const lines: string[] = [];
   let currentLine = words[0] || '';
@@ -745,7 +755,7 @@ function renderChartFormat(
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY - 8);
-      avatarY = barY - avatarRadius - 76;
+      avatarY = barY - avatarRadius - 68;
     }
     ctx.restore();
 
@@ -1232,7 +1242,7 @@ function renderCombinationFormat(
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY - 8);
-      avatarY = barY - avatarRadius - 76;
+      avatarY = barY - avatarRadius - 68;
     }
     ctx.restore();
 

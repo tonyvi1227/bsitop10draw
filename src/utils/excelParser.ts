@@ -55,8 +55,16 @@ export function cleanTextSpaces(val: any): string {
   // Convert non-breaking space (\u00A0) and tabs to standard space
   str = str.replace(/[\u00A0\t]/g, ' ');
 
-  // Convert all newlines (\r\n, \n, \r) to space, trim, and collapse consecutive spaces
-  return str.replace(/[\r\n]/g, ' ').replace(/\s+/g, ' ').trim();
+  // Replace '|' with space so pipe character in campaign names never forces line breaks
+  str = str.replace(/\|/g, ' ');
+
+  // Preserve newlines (\r\n, \n) for explicit multi-line text, trim each line
+  const lines = str
+    .split(/[\r\n]+/)
+    .map((line) => line.replace(/\s+/g, ' ').trim())
+    .filter(Boolean);
+
+  return lines.join('\n');
 }
 
 /**
