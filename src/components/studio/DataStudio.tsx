@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { BsiItem, BsiReportMetadata, CategoryType } from '../../types/bsi';
 import {
-  fetchGoogleSheetLive,
   fetchGoogleSheetsAllTabsLive,
   downloadSampleExcelTemplate,
 } from '../../utils/excelParser';
@@ -12,7 +11,6 @@ import {
   RefreshCw,
   FileSpreadsheet,
   Download,
-  ShieldCheck,
   CheckCircle2,
   AlertTriangle,
   Calendar,
@@ -39,7 +37,6 @@ export const DataStudio: React.FC<DataStudioProps> = ({
   setMetadata,
   categoryDataStore,
   setCategoryDataStore,
-  onNavigateToGraphic,
 }) => {
   const DEFAULT_GSHEET_URL =
     'https://docs.google.com/spreadsheets/d/1Qz2Tt739SP7uWDtjy_sZkYws6_4vymuESNzIvLJZGqE/edit?gid=1831565463#gid=1831565463';
@@ -158,7 +155,7 @@ export const DataStudio: React.FC<DataStudioProps> = ({
     setIsFetchingSheet(true);
     setSyncStatus({
       type: 'info',
-      message: `Đang đồng bộ Google Sheet cả 4 Hạng Mục cho tháng ${metadata.month}/${metadata.year}...`,
+      message: `Đang đồng bộ dữ liệu cả 4 Hạng Mục cho tháng ${metadata.month}/${metadata.year}...`,
     });
 
     try {
@@ -186,7 +183,7 @@ export const DataStudio: React.FC<DataStudioProps> = ({
 
         setSyncStatus({
           type: 'success',
-          message: `Đã đồng bộ Live thành công ${syncedCategories.length} Hạng Mục cho Tháng ${metadata.month}/${metadata.year}! (${countsStr})`,
+          message: `Đã đồng bộ dữ liệu thành công ${syncedCategories.length} Hạng Mục cho Tháng ${metadata.month}/${metadata.year}! (${countsStr})`,
         });
       }
     } catch (err: any) {
@@ -200,35 +197,26 @@ export const DataStudio: React.FC<DataStudioProps> = ({
     }
   };
 
-  // Auto-QC System checks
-  const isCountPassed = currentItems.length >= 10;
-  const isSortedPassed = currentItems.every((item, idx) => {
-    if (idx === 0) return true;
-    return currentItems[idx - 1].bsiScore >= item.bsiScore;
-  });
-  const longNameCount = currentItems.filter((item) => item.name.length > 35).length;
-  const missingAvatarCount = currentItems.filter((item) => !item.croppedImageData && !item.imageUrl).length;
-
   const categoryLabels: Record<CategoryType, string> = {
-    CAMPAIGNS: 'QU Campaigns',
-    INFLUENCERS: 'QU Celebs',
-    EVENTS: 'QU Events',
-    SHOWS: 'QU Shows',
+    CAMPAIGNS: 'Campaigns',
+    INFLUENCERS: 'Celebs',
+    EVENTS: 'Events',
+    SHOWS: 'Shows',
   };
 
   return (
     <div className="flex-1 h-full overflow-y-auto bg-slate-950 p-6 lg:p-8 space-y-6 select-none">
-      {/* 1. Header Banner & Google Sheet Sync */}
+      {/* 1. Header Banner & Google Sheet Sync Input */}
       <div className="rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-slate-800 border border-slate-700/80 p-6 shadow-xl space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-buzz-orange to-amber-500 flex items-center justify-center shadow-lg shadow-buzz-orange/30">
-              <Link2 className="w-6 h-6 text-white" />
+            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-buzz-orange to-amber-500 flex items-center justify-center shadow-lg shadow-buzz-orange/30">
+              <Link2 className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-white flex items-center gap-2">
+              <h2 className="text-base font-bold text-white flex items-center gap-2">
                 Google Sheets Live Data Studio
-                <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold">
+                <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-extrabold">
                   LIVE SYNC
                 </span>
               </h2>
@@ -246,28 +234,21 @@ export const DataStudio: React.FC<DataStudioProps> = ({
               <Download className="w-4 h-4" />
               <span>Tải Template 4 Sheet</span>
             </button>
-            <button
-              onClick={onNavigateToGraphic}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-buzz-orange to-buzz-lightOrange text-white text-xs font-bold shadow-lg shadow-buzz-orange/30 hover:shadow-buzz-orange/50 transition transform active:scale-95 flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>Xem Đồ Họa Graphic Studio →</span>
-            </button>
           </div>
         </div>
 
         {/* Input Google Sheet Link Bar */}
-        <div className="flex flex-col sm:flex-row gap-3 pt-2">
+        <div className="flex flex-col sm:flex-row gap-3 pt-1">
           <div className="flex-1 relative">
             <input
               type="text"
               value={gsheetUrl}
               onChange={(e) => setGsheetUrl(e.target.value)}
               placeholder="Dán link Google Sheet tại đây (vd: https://docs.google.com/spreadsheets/d/...)"
-              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-xs text-white font-medium focus:outline-none focus:border-buzz-orange focus:ring-1 focus:ring-buzz-orange transition pr-10"
+              className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-buzz-orange focus:ring-1 focus:ring-buzz-orange transition pr-10"
             />
             {gsheetUrl && (
-              <span className="absolute right-3 top-3 text-emerald-400" title="Link đã nhận">
+              <span className="absolute right-3 top-2.5 text-emerald-400" title="Link đã nhận">
                 <Check className="w-4 h-4" />
               </span>
             )}
@@ -275,14 +256,14 @@ export const DataStudio: React.FC<DataStudioProps> = ({
           <button
             onClick={handleFetchGoogleSheet}
             disabled={isFetchingSheet}
-            className="px-6 py-3 rounded-xl bg-buzz-orange hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-buzz-orange/20 transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
+            className="px-6 py-2.5 rounded-xl bg-buzz-orange hover:bg-amber-600 text-white font-bold text-xs shadow-md shadow-buzz-orange/20 transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 shrink-0"
           >
             {isFetchingSheet ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
               <RefreshCw className="w-4 h-4" />
             )}
-            <span>Đồng Bộ Google Sheet Live</span>
+            <span>Đồng bộ dữ liệu</span>
           </button>
         </div>
 
@@ -305,124 +286,54 @@ export const DataStudio: React.FC<DataStudioProps> = ({
         )}
       </div>
 
-      {/* 2. Selection Bar: Month/Year & Category Tabs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Date Filter & Selector */}
-        <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-buzz-orange" />
-            Thời gian báo cáo (Month/Year)
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <span className="text-[11px] text-slate-400 block mb-1">Tháng (MM)</span>
-              <input
-                type="text"
-                value={metadata.month}
-                onChange={(e) => setMetadata((prev) => ({ ...prev, month: e.target.value }))}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
-                placeholder="06"
-              />
-            </div>
-            <div>
-              <span className="text-[11px] text-slate-400 block mb-1">Năm (YYYY)</span>
-              <input
-                type="text"
-                value={metadata.year}
-                onChange={(e) => setMetadata((prev) => ({ ...prev, year: e.target.value }))}
-                className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
-                placeholder="2026"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Category Switcher Tabs */}
-        <div className="md:col-span-2 rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-3">
-          <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
-            <FileSpreadsheet className="w-4 h-4 text-buzz-orange" />
-            Hạng mục báo cáo Google Sheet (4 Tabs)
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      {/* 2. Unified Data Section: Controls + Category Switcher + Data Table */}
+      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4 shadow-xl">
+        {/* Integrated Control & Category Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl">
+          {/* Category Tabs */}
+          <div className="flex items-center gap-2 overflow-x-auto">
+            <span className="text-xs font-bold uppercase text-slate-400 shrink-0 mr-1 flex items-center gap-1.5">
+              <FileSpreadsheet className="w-4 h-4 text-buzz-orange" />
+              Bảng:
+            </span>
             {(['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'] as CategoryType[]).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setMetadata((prev) => ({ ...prev, category: cat }))}
-                className={`py-3 px-3 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center gap-1 border ${
+                className={`py-1.5 px-3.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 border whitespace-nowrap ${
                   metadata.category === cat
-                    ? 'bg-buzz-orange text-white border-buzz-orange shadow-lg shadow-buzz-orange/20 ring-1 ring-buzz-orange'
-                    : 'bg-slate-950/60 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-buzz-orange text-white border-buzz-orange shadow-md shadow-buzz-orange/20 ring-1 ring-buzz-orange'
+                    : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
                 }`}
               >
                 <span>{categoryLabels[cat]}</span>
-                <span className="text-[10px] opacity-80">({categoryDataStore[cat]?.length || 0} mục)</span>
+                <span className="text-[10px] opacity-75 font-mono">({categoryDataStore[cat]?.length || 0})</span>
               </button>
             ))}
           </div>
-        </div>
-      </div>
 
-      {/* 3. Auto-QC System & Audit Checklist Panel */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2.5">
-            <ShieldCheck className="w-5 h-5 text-buzz-orange" />
-            <h3 className="font-bold text-sm text-white">Bảng Kiểm Định Quality Control (Auto-QC Audit Engine)</h3>
-          </div>
-          <span className="text-xs font-semibold px-3 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-            Source Check: 100% Verified
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Rule 1: Count */}
-          <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${isCountPassed ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300' : 'bg-rose-950/30 border-rose-800/50 text-rose-300'}`}>
-            {isCountPassed ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" /> : <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />}
-            <div>
-              <p className="font-bold text-xs">Số lượng Top 10</p>
-              <p className="text-[11px] opacity-80">{isCountPassed ? 'Đã đủ 10 vị trí' : `Chưa đủ 10 vị trí (${currentItems.length}/10)`}</p>
+          {/* Month / Year inputs & Bulk Upload */}
+          <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1">
+              <Calendar className="w-3.5 h-3.5 text-buzz-orange shrink-0" />
+              <span className="text-[11px] text-slate-400 font-medium">Tháng:</span>
+              <input
+                type="text"
+                value={metadata.month}
+                onChange={(e) => setMetadata((prev) => ({ ...prev, month: e.target.value }))}
+                className="w-8 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
+                placeholder="06"
+              />
+              <span className="text-[11px] text-slate-400 font-medium ml-1">Năm:</span>
+              <input
+                type="text"
+                value={metadata.year}
+                onChange={(e) => setMetadata((prev) => ({ ...prev, year: e.target.value }))}
+                className="w-12 bg-slate-950 border border-slate-700 rounded px-1 py-0.5 text-xs text-white font-bold text-center focus:outline-none focus:border-buzz-orange"
+                placeholder="2026"
+              />
             </div>
-          </div>
 
-          {/* Rule 2: Sorting */}
-          <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${isSortedPassed ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300' : 'bg-amber-950/30 border-amber-800/50 text-amber-300'}`}>
-            {isSortedPassed ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" /> : <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />}
-            <div>
-              <p className="font-bold text-xs">Thứ tự BSI giảm dần</p>
-              <p className="text-[11px] opacity-80">{isSortedPassed ? 'Thứ tự giảm dần chuẩn 100%' : 'Cần sắp xếp lại Rank'}</p>
-            </div>
-          </div>
-
-          {/* Rule 3: Text Truncation */}
-          <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${longNameCount === 0 ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300' : 'bg-amber-950/30 border-amber-800/50 text-amber-300'}`}>
-            {longNameCount === 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" /> : <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />}
-            <div>
-              <p className="font-bold text-xs">Kiểm tra Độ dài Tên</p>
-              <p className="text-[11px] opacity-80">{longNameCount === 0 ? 'Tên đối tượng vừa đẹp' : `${longNameCount} tên dài (>35 ký tự)`}</p>
-            </div>
-          </div>
-
-          {/* Rule 4: Avatar Status */}
-          <div className={`p-3.5 rounded-xl border flex items-start gap-3 ${missingAvatarCount === 0 ? 'bg-emerald-950/30 border-emerald-800/50 text-emerald-300' : 'bg-slate-800 border-slate-700 text-slate-300'}`}>
-            {missingAvatarCount === 0 ? <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" /> : <ImageIcon className="w-5 h-5 text-slate-400 shrink-0 mt-0.5" />}
-            <div>
-              <p className="font-bold text-xs">Trạng thái Avatar/Logo</p>
-              <p className="text-[11px] opacity-80">{missingAvatarCount === 0 ? 'Đã có đủ 10 ảnh Avatar' : `Có ${missingAvatarCount} vị trí chưa có ảnh`}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Data Preview Grid Table & Row Image Uploaders */}
-      <div className="rounded-2xl bg-slate-900 border border-slate-800 p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-buzz-orange" />
-            <h3 className="font-bold text-sm text-white">
-              Bảng Số Liệu Xem Trực Tiếp ({categoryLabels[metadata.category]} - Tháng {metadata.month}/{metadata.year})
-            </h3>
-          </div>
-          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowBulkImageUpload((prev) => !prev)}
               className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-slate-200 transition flex items-center gap-1.5"
@@ -431,7 +342,6 @@ export const DataStudio: React.FC<DataStudioProps> = ({
               <span>Upload 10 Logo Hàng Loạt</span>
               {showBulkImageUpload ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
-            <span className="text-xs text-slate-400 font-medium">Top 10 Hàng Đầu</span>
           </div>
         </div>
 
@@ -452,7 +362,7 @@ export const DataStudio: React.FC<DataStudioProps> = ({
               <tr className="bg-slate-950 text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800">
                 <th className="py-3 px-4 w-12 text-center">Rank</th>
                 {metadata.category === 'CAMPAIGNS' && <th className="py-3 px-4 w-36">Brand</th>}
-                <th className="py-3 px-4 min-w-[200px]">Tên đối tượng ({metadata.category})</th>
+                <th className="py-3 px-4 min-w-[200px]">Tên đối tượng ({categoryLabels[metadata.category]})</th>
                 <th className="py-3 px-4 text-right text-buzz-orange">BSI (real)</th>
                 <th className="py-3 px-4 text-right text-sky-400">Content from QU</th>
                 <th className="py-3 px-4 text-right">Buzz Volume</th>

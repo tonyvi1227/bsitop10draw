@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  CheckCircle2, 
-  Download, 
   ShieldCheck, 
   Layers, 
   BarChart3, 
@@ -12,7 +10,7 @@ import {
   RefreshCw,
   FileArchive,
   Database,
-  Search
+  Download
 } from 'lucide-react';
 import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
 import { renderCanvasToBlob, downloadCanvasImage } from '../../utils/canvasRenderer';
@@ -122,7 +120,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
   const currentCategoryItems = allCategoryItems[activeCategory] || items;
 
   return (
-    <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden">
+    <div className="flex flex-col h-full bg-slate-950 text-slate-100 overflow-hidden select-none">
       {/* Top Bar Navigation for QC Station */}
       <div className="bg-slate-900/90 backdrop-blur border-b border-slate-800 px-6 py-3 flex items-center justify-between shrink-0 shadow-md">
         <div className="flex items-center gap-3">
@@ -169,64 +167,63 @@ export const QCStudio: React.FC<QCStudioProps> = ({
 
       {/* QC Studio Body */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Side: Selectors & Live Data Table Inspector Panel */}
-        <div className="w-[420px] bg-slate-900/80 border-r border-slate-800 p-4 flex flex-col gap-4 overflow-y-auto shrink-0">
-          {/* Category Selector */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-buzz-orange" />
-              Chọn Hạng Mục Kiểm Tra
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {(['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'] as CategoryType[]).map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategoryChange(cat)}
-                  className={`py-2 px-3 rounded-lg text-xs font-bold transition border text-center ${
-                    activeCategory === cat
-                      ? 'bg-buzz-orange text-white border-buzz-orange shadow-md shadow-buzz-orange/20'
-                      : 'bg-slate-800/80 text-slate-300 border-slate-700/80 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  {cat === 'INFLUENCERS' ? 'CELEBS' : cat}
-                </button>
-              ))}
+        {/* Left Side: Compact Controls & Highlighted Live Data Inspector Panel */}
+        <div className="w-[450px] bg-slate-900/90 border-r border-slate-800 p-4 flex flex-col gap-3 shrink-0">
+          
+          {/* Compact Category & Format Controls (Inline & Space Saving) */}
+          <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 shrink-0">
+            {/* Category Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 w-16">
+                Hạng Mục:
+              </span>
+              <div className="flex-1 grid grid-cols-4 gap-1">
+                {(['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'] as CategoryType[]).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => handleCategoryChange(cat)}
+                    className={`py-1 px-1.5 rounded text-[11px] font-bold transition border text-center whitespace-nowrap ${
+                      activeCategory === cat
+                        ? 'bg-buzz-orange text-white border-buzz-orange shadow-sm'
+                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    {cat === 'INFLUENCERS' ? 'CELEBS' : cat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Format Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 shrink-0 w-16">
+                Định Dạng:
+              </span>
+              <div className="flex-1 grid grid-cols-3 gap-1">
+                {[
+                  { id: 'CHART', label: '1. Chart' },
+                  { id: 'TABLE', label: '2. Table' },
+                  { id: 'COMBINATION', label: '3. Combo' },
+                ].map(({ id, label }) => (
+                  <button
+                    key={id}
+                    onClick={() => handleFormatChange(id as FormatType)}
+                    className={`py-1 px-2 rounded text-[11px] font-bold transition border text-center ${
+                      activeFormat === id
+                        ? 'bg-slate-800 text-buzz-orange border-buzz-orange ring-1 ring-buzz-orange'
+                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-slate-200'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* Format Selector */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-              <Layers className="w-3.5 h-3.5 text-buzz-orange" />
-              Chọn Định Dạng Xem QC
-            </label>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'CHART', label: '1. Chart', icon: BarChart3 },
-                { id: 'TABLE', label: '2. Table', icon: Table },
-                { id: 'COMBINATION', label: '3. Combo', icon: Layers },
-              ].map(({ id, label, icon: Icon }) => (
-                <button
-                  key={id}
-                  onClick={() => handleFormatChange(id as FormatType)}
-                  className={`py-2 px-2 rounded-lg text-xs font-bold transition flex flex-col items-center gap-1 border ${
-                    activeFormat === id
-                      ? 'bg-slate-800 text-buzz-orange border-buzz-orange ring-1 ring-buzz-orange'
-                      : 'bg-slate-800/50 text-slate-400 border-slate-700/60 hover:bg-slate-800 hover:text-slate-200'
-                  }`}
-                >
-                  <Icon className="w-4 h-4" />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <hr className="border-slate-800" />
-
-          {/* BẢNG DATA KIỂM TRA LẠI 1 LẦN NỮA (LIVE DATA TABLE INSPECTOR) */}
-          <div className="flex-1 flex flex-col space-y-2.5 min-h-0">
-            <div className="flex items-center justify-between">
+          {/* HIGHLIGHTED LIVE DATA TABLE INSPECTOR (Takes up full height so all 10 rows are visible!) */}
+          <div className="flex-1 flex flex-col space-y-2 min-h-0 bg-slate-950 p-3 rounded-xl border border-slate-800">
+            <div className="flex items-center justify-between shrink-0">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
                 <Database className="w-4 h-4 text-buzz-orange" />
                 Bảng Data Kiểm Tra Số Liệu ({activeCategory})
@@ -236,13 +233,13 @@ export const QCStudio: React.FC<QCStudioProps> = ({
               </span>
             </div>
 
-            {/* Scrollable Mini Table */}
-            <div className="flex-1 overflow-y-auto rounded-xl border border-slate-800 bg-slate-950">
+            {/* Scrollable Data Table */}
+            <div className="flex-1 overflow-y-auto rounded-lg border border-slate-800 bg-slate-900/60">
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 bg-slate-900 text-[10px] font-bold uppercase text-slate-400 border-b border-slate-800">
                   <tr>
                     <th className="py-2 px-2 text-center w-8">#</th>
-                    <th className="py-2 px-2 min-w-[120px]">Tên đối tượng</th>
+                    <th className="py-2 px-2 min-w-[130px]">Tên đối tượng</th>
                     <th className="py-2 px-2 text-right text-buzz-orange">BSI</th>
                     <th className="py-2 px-2 text-right text-sky-400">CFQU</th>
                     <th className="py-2 px-2 text-center w-12">Avatar</th>
@@ -250,14 +247,14 @@ export const QCStudio: React.FC<QCStudioProps> = ({
                 </thead>
                 <tbody className="divide-y divide-slate-800/60 text-xs font-semibold">
                   {currentCategoryItems.slice(0, 10).map((item, idx) => (
-                    <tr key={idx} className="hover:bg-slate-900/60 transition">
+                    <tr key={idx} className="hover:bg-slate-800/50 transition">
                       <td className="py-2 px-2 text-center">
                         <span className="w-5 h-5 rounded-full bg-buzz-orange/20 text-buzz-orange font-bold text-[10px] inline-flex items-center justify-center border border-buzz-orange/40">
                           {item.rank}
                         </span>
                       </td>
                       <td className="py-2 px-2">
-                        <div className="font-bold text-white leading-tight text-[11px] max-w-[150px] truncate" title={item.name}>
+                        <div className="font-bold text-white leading-tight text-[11px] max-w-[160px] truncate" title={item.name}>
                           {item.name}
                         </div>
                         {item.brandName && (
@@ -315,7 +312,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
           </div>
         </div>
 
-        {/* Center High-Res Canvas Viewport */}
+        {/* Center High-Res Canvas Viewport (Highlighted) */}
         <div className="flex-1 bg-slate-950 p-6 flex flex-col items-center justify-center overflow-auto relative">
           {isRendering && (
             <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-20">
