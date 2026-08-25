@@ -30,17 +30,17 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
     H2: `${baseUrl}assets/H2.png${cacheBuster}`,
     H3: `${baseUrl}assets/H3.png${cacheBuster}`,
     logo: `${baseUrl}assets/logo.png${cacheBuster}`,
-    TABLE_CAMPAIGNS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-CAMP-TEMPLATE.png${cacheBuster}`,
-    TABLE_EVENTS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-EVENT-TEMPLATE.png${cacheBuster}`,
-    TABLE_INFLUENCERS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
-    TABLE_CELEBS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
-    TABLE_SHOWS: `${baseUrl}assets/TABLE%20TEMPLATE/BSITOP10_Ver2025_TABLE-SHOWS-TEMPLATE.png${cacheBuster}`,
-    COMBO_CAMPAIGNS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
-    COMBO_EVENTS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/EVENT.png${cacheBuster}`,
-    COMBO_INFLUENCERS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
-    COMBO_CELEBS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
-    COMBO_SHOWS: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/SHOW.png${cacheBuster}`,
-    COMBO_TEMPLATE: `${baseUrl}assets/TABLE%20TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
+    TABLE_CAMPAIGNS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-CAMP-TEMPLATE.png${cacheBuster}`,
+    TABLE_EVENTS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-EVENT-TEMPLATE.png${cacheBuster}`,
+    TABLE_INFLUENCERS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
+    TABLE_CELEBS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
+    TABLE_SHOWS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-SHOWS-TEMPLATE.png${cacheBuster}`,
+    COMBO_CAMPAIGNS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
+    COMBO_EVENTS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/EVENT.png${cacheBuster}`,
+    COMBO_INFLUENCERS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
+    COMBO_CELEBS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
+    COMBO_SHOWS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/SHOW.png${cacheBuster}`,
+    COMBO_TEMPLATE: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
   };
 
   const promises = Object.entries(assetMap).map(([name, url]) => {
@@ -51,9 +51,19 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
         assets[name] = img;
         resolve();
       };
-      img.onerror = (e) => {
-        console.error(`Failed to load template asset: ${name} from ${url}`, e);
-        resolve();
+      img.onerror = () => {
+        const altUrl = url.includes('%20') ? url.replace(/%20/g, ' ') : url.replace(/ /g, '%20');
+        const img2 = new Image();
+        img2.crossOrigin = 'anonymous';
+        img2.onload = () => {
+          assets[name] = img2;
+          resolve();
+        };
+        img2.onerror = () => {
+          console.error(`Failed to load template asset: ${name} from both ${url} and ${altUrl}`);
+          resolve();
+        };
+        img2.src = altUrl;
       };
       img.src = url;
     });
@@ -1269,9 +1279,9 @@ function renderCombinationFormat(
     });
   });
 
-  // Bottom Chart Line Trend (Move line chart down 5px: trendTop=1665, trendBottom=2205)
-  const trendTop = 1665;
-  const trendBottom = 2205;
+  // Bottom Chart Line Trend inside lower frame (trendTop=1840, trendBottom=2260)
+  const trendTop = 1840;
+  const trendBottom = 2260;
   const trendH = trendBottom - trendTop;
 
   const quValues = top10.map((item) => (item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0)));
@@ -1285,7 +1295,7 @@ function renderCombinationFormat(
     const centerX = columnCentersX[idx] || (chartLeft + idx * colGap + colGap / 2);
     const val = item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0);
     const ratio = (val - minQu) / rangeQu;
-    const paddingY = 70;
+    const paddingY = 40;
     const posY = trendBottom - paddingY - ratio * (trendH - paddingY * 2);
     nodePoints.push({ x: centerX, y: posY, val });
   });
