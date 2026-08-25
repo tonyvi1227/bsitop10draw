@@ -55,16 +55,7 @@ export function cleanTextSpaces(val: any): string {
   // Convert non-breaking space (\u00A0) and tabs to standard space
   str = str.replace(/[\u00A0\t]/g, ' ');
 
-  // If text has explicit '|' delimiter, preserve '|' for manual line breaks
-  if (str.includes('|')) {
-    const lines = str
-      .split('|')
-      .map((line) => line.replace(/[\r\n]/g, ' ').replace(/\s+/g, ' ').trim())
-      .filter(Boolean);
-    return lines.join(' | ');
-  }
-
-  // Single line / flattened text: convert all newlines to space, trim, and collapse consecutive spaces
+  // Convert all newlines (\r\n, \n, \r) to space, trim, and collapse consecutive spaces
   return str.replace(/[\r\n]/g, ' ').replace(/\s+/g, ' ').trim();
 }
 

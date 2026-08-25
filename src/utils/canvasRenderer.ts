@@ -1,4 +1,4 @@
-﻿import { BsiItem, BsiReportMetadata } from '../types/bsi';
+import { BsiItem, BsiReportMetadata } from '../types/bsi';
 import { BUZZ_COLORS, CATEGORY_CONFIG } from '../constants/branding';
 import { cleanTextSpaces } from './excelParser';
 
@@ -207,17 +207,6 @@ function wrapText(
   if (!text) return [];
 
   const cleaned = cleanTextSpaces(text);
-
-  // Manual line breaks using '|' or '\n'
-  if (cleaned.includes('|') || cleaned.includes('\n')) {
-    const delimiter = cleaned.includes('\n') ? '\n' : '|';
-    const manualLines = cleaned
-      .split(delimiter)
-      .map((l) => l.replace(/[ \t]+/g, ' ').trim())
-      .filter(Boolean);
-    return manualLines.slice(0, maxLines);
-  }
-
   const words = cleaned.split(/\s+/);
   const lines: string[] = [];
   let currentLine = words[0] || '';
@@ -739,26 +728,25 @@ function renderChartFormat(
     drawRoundedRect(ctx, barX, barY, barWidth, displayBarH, { tl: Math.min(barRadius, displayBarH / 2), tr: Math.min(barRadius, displayBarH / 2), br: 0, bl: 0 });
     ctx.fill();
 
-    // 5. SỐ ĐIỂM BSI (Font: SVN-Mont Heavy / Weight 800, Size 37px)
+    // 5. SỐ ĐIỂM BSI (Font: Inter Weight 800)
     ctx.save();
-    ctx.font = '800 37px "Inter", "SVN-Mont", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
     let avatarY: number;
 
-    // Logic 2: Nếu chiều cao cột không hơn so với chiều cao số 37px ít nhất 50px (rawBarH < 87px), bắt buộc move số ra khỏi cột & đổi màu cam #E68228
-    // Khoảng cách từ avatar xuống đỉnh cột/chữ số tăng thêm 10px (từ -14px lên -24px, và từ -55px lên -65px)
     if (rawBarH >= 87) {
+      ctx.font = '800 32px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY + displayBarH - 14);
-      avatarY = barY - avatarRadius - 24;
+      avatarY = barY - avatarRadius - 20;
     } else {
+      ctx.font = '800 28px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY - 10);
-      avatarY = barY - avatarRadius - 65;
+      ctx.fillText(scoreStr, centerX, barY - 6);
+      avatarY = barY - avatarRadius - 58;
     }
     ctx.restore();
 
@@ -1230,22 +1218,23 @@ function renderCombinationFormat(
     ctx.fill();
 
     ctx.save();
-    ctx.font = 'bold 40px "Inter", "Inter", "SVN-Mont", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
     let avatarY: number;
 
     if (rawBarH >= 74) {
+      ctx.font = 'bold 30px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY + displayBarH - 15);
-      avatarY = barY - avatarRadius - 24;
+      ctx.fillText(scoreStr, centerX, barY + displayBarH - 12);
+      avatarY = barY - avatarRadius - 20;
     } else {
+      ctx.font = 'bold 28px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY - 8);
-      avatarY = barY - avatarRadius - 48;
+      ctx.fillText(scoreStr, centerX, barY - 6);
+      avatarY = barY - avatarRadius - 58;
     }
     ctx.restore();
 

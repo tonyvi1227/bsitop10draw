@@ -122,13 +122,6 @@ export const App: React.FC = () => {
             <span>4. Hướng Dẫn</span>
           </button>
         </div>
-
-        {/* Global Metadata info */}
-        <div className="hidden md:flex items-center gap-3">
-          <span className="text-xs text-slate-400 font-semibold px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
-            {metadata.category} • Tháng {metadata.month}/{metadata.year}
-          </span>
-        </div>
       </header>
 
       {/* Main Studio View Container */}
