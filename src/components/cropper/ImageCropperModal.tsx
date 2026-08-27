@@ -107,35 +107,46 @@ export const ImageCropperModal: React.FC<ImageCropperModalProps> = ({
     setIsDragging(false);
   };
 
-  // Generate High-Res Cropped Circular Image
+  // Generate High-Res Cropped Circular Image (1-to-1 scale with preview modal guide circle)
   const handleSave = () => {
     if (!imgObj) return;
 
-    const exportSize = 300;
+    const exportSize = 600;
     const exportCanvas = document.createElement('canvas');
     exportCanvas.width = exportSize;
     exportCanvas.height = exportSize;
     const ctx = exportCanvas.getContext('2d');
     if (!ctx) return;
 
+    const previewSize = 300;
+    const previewCropRadius = previewSize / 2 - 8; // 142px
+    const exportCropRadius = exportSize / 2; // 300px
+    const ratio = exportCropRadius / previewCropRadius; // ~2.1127
+
+    // Clear background
+    ctx.clearRect(0, 0, exportSize, exportSize);
+
+    ctx.save();
+
     // Clip Circle
     ctx.beginPath();
     ctx.arc(exportSize / 2, exportSize / 2, exportSize / 2, 0, Math.PI * 2);
     ctx.clip();
 
-    // Fill white bg
+    // Fill white bg inside circle
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, exportSize, exportSize);
 
-    // Draw Image
+    // Compute exact 1-to-1 scaled dimensions matching preview modal
     const minDim = Math.min(imgObj.width, imgObj.height);
-    const drawW = (imgObj.width / minDim) * exportSize * scale;
-    const drawH = (imgObj.height / minDim) * exportSize * scale;
+    const drawW = (imgObj.width / minDim) * (exportCropRadius * 2) * scale;
+    const drawH = (imgObj.height / minDim) * (exportCropRadius * 2) * scale;
 
-    const posX = (exportSize - drawW) / 2 + offsetX;
-    const posY = (exportSize - drawH) / 2 + offsetY;
+    const posX = exportSize / 2 - drawW / 2 + offsetX * ratio;
+    const posY = exportSize / 2 - drawH / 2 + offsetY * ratio;
 
     ctx.drawImage(imgObj, posX, posY, drawW, drawH);
+    ctx.restore();
 
     const croppedUrl = exportCanvas.toDataURL('image/png', 1.0);
     onApplyCrop(croppedUrl);

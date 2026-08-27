@@ -308,35 +308,24 @@ function drawAvatar(
 ) {
   ctx.save();
 
-  // 1. White circular background base
-  ctx.beginPath();
-  ctx.arc(x, y, radius + 6, 0, Math.PI * 2);
-  ctx.fillStyle = BUZZ_COLORS.white;
-  ctx.fill();
-
-  // 2. Outer thin orange concentric circle
+  // 1. Outer thin orange concentric circle
   ctx.beginPath();
   ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
   ctx.strokeStyle = '#E68228';
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // 3. Inner thin orange concentric circle
+  // 2. Avatar image clipped slightly past radius (radius + 1px) to prevent sub-pixel white gaps
+  ctx.save();
   ctx.beginPath();
-  ctx.arc(x, y, radius + 1.5, 0, Math.PI * 2);
-  ctx.strokeStyle = '#E68228';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.arc(x, y, radius + 1, 0, Math.PI * 2);
   ctx.clip();
 
   if (img) {
-    ctx.drawImage(img, x - radius, y - radius, radius * 2, radius * 2);
+    ctx.drawImage(img, x - radius - 1, y - radius - 1, (radius + 1) * 2, (radius + 1) * 2);
   } else {
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    ctx.fillRect(x - radius - 1, y - radius - 1, (radius + 1) * 2, (radius + 1) * 2);
 
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'center';
@@ -345,6 +334,14 @@ function drawAvatar(
     const initial = name.trim().charAt(0).toUpperCase() || `${rank}`;
     ctx.fillText(initial, x, y);
   }
+  ctx.restore();
+
+  // 3. Inner thin orange concentric circle drawn ON TOP of image edge to seal any gap seamlessly
+  ctx.beginPath();
+  ctx.arc(x, y, radius + 1.5, 0, Math.PI * 2);
+  ctx.strokeStyle = '#E68228';
+  ctx.lineWidth = 2.5;
+  ctx.stroke();
 
   ctx.restore();
 }
