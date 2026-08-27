@@ -212,31 +212,32 @@ function drawRoundedRect(
 }
 
 /**
- * Helper to wrap text into multiple lines with manual break (| or \n) support and smart phrase wrapping
+ * Helper to wrap text into multiple lines with manual break (//, ||, or \n) support and smart phrase wrapping
  */
 function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
   maxLines: number = 5,
-  allowPipeBreak: boolean = false
+  allowManualBreak: boolean = false
 ): string[] {
   if (!text) return [];
 
   let cleaned = cleanTextSpaces(text);
 
-  // Manual line breaks using '|' for Chart and Combo format when allowed
-  if (allowPipeBreak && cleaned.includes('|')) {
-    const pipeLines = cleaned
-      .split('|')
+  // Manual line breaks using '//' or '||' for Chart and Combo format when allowed
+  if (allowManualBreak && (cleaned.includes('//') || cleaned.includes('||'))) {
+    const delimiter = cleaned.includes('//') ? '//' : '||';
+    const manualLines = cleaned
+      .split(delimiter)
       .map((l) => l.replace(/[ \t]+/g, ' ').trim())
       .filter(Boolean);
-    return pipeLines.slice(0, maxLines);
+    return manualLines.slice(0, maxLines);
   }
 
-  // Replace '|' with space for Table format when pipe break is not allowed
-  if (!allowPipeBreak) {
-    cleaned = cleaned.replace(/\|/g, ' ');
+  // Replace '//' or '||' with space for Table format when manual break is not allowed
+  if (!allowManualBreak) {
+    cleaned = cleaned.replace(/\/\//g, ' ').replace(/\|\|/g, ' ');
   }
 
   // If text contains explicit newlines '\n' (from Excel Alt+Enter), handle line breaks
@@ -1336,24 +1337,41 @@ function renderCombinationFormat(
       ctx.fillStyle = '#E68228';
       ctx.fill();
 
-      let isAbove = i % 2 === 0;
-
       const nextPt = nodePoints[i + 1];
       const prevPt = nodePoints[i - 1];
 
-      // Slope check: If next segment drops steeply (nextPt.y > pt.y + 35), place label ABOVE so downward line doesn't cut through text!
-      if (nextPt && nextPt.y > pt.y + 35) {
-        isAbove = true;
-      }
-      // If previous segment dropped steeply from above (prevPt.y < pt.y - 35), place label ABOVE
-      else if (prevPt && prevPt.y < pt.y - 35) {
-        isAbove = true;
+      // Smart geometric open-space label positioning:
+      let isAbove = true;
+
+      if (nextPt && prevPt) {
+        // Trough/Valley (both adjacent nodes higher): place label BELOW in open valley space
+        if (nextPt.y < pt.y - 15 && prevPt.y < pt.y - 15) {
+          isAbove = false;
+        }
+        // Downward slope: next node drops to right -> place label ABOVE to clear downward line
+        else if (nextPt.y > pt.y + 15) {
+          isAbove = true;
+        }
+        // Upward slope: next node goes up to right -> place label BELOW to clear upward line
+        else if (nextPt.y < pt.y - 15) {
+          isAbove = false;
+        }
+        // Flat/gentle slope -> alternate based on i % 2
+        else {
+          isAbove = i % 2 === 0;
+        }
+      } else if (nextPt) {
+        // First node (Rank 1): if line goes down to right, place label ABOVE; if line goes up, place BELOW
+        isAbove = nextPt.y >= pt.y - 10;
+      } else if (prevPt) {
+        // Last node (Rank 10): if line came down from left, place label BELOW; if line came up, place ABOVE
+        isAbove = prevPt.y <= pt.y + 10;
       }
 
       // Safety bounds check to avoid frame border collision
-      if (pt.visualRatio < 0.15 && !isAbove && pt.y > 2150) {
+      if (pt.visualRatio < 0.15 && !isAbove && pt.y > 2145) {
         isAbove = true;
-      } else if (pt.visualRatio > 0.85 && isAbove && pt.y < 1850) {
+      } else if (pt.visualRatio > 0.85 && isAbove && pt.y < 1855) {
         isAbove = false;
       }
 
