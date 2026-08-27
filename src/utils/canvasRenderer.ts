@@ -218,11 +218,26 @@ function wrapText(
   ctx: CanvasRenderingContext2D,
   text: string,
   maxWidth: number,
-  maxLines: number = 5
+  maxLines: number = 5,
+  allowPipeBreak: boolean = false
 ): string[] {
   if (!text) return [];
 
-  const cleaned = cleanTextSpaces(text);
+  let cleaned = cleanTextSpaces(text);
+
+  // Manual line breaks using '|' for Chart and Combo format when allowed
+  if (allowPipeBreak && cleaned.includes('|')) {
+    const pipeLines = cleaned
+      .split('|')
+      .map((l) => l.replace(/[ \t]+/g, ' ').trim())
+      .filter(Boolean);
+    return pipeLines.slice(0, maxLines);
+  }
+
+  // Replace '|' with space for Table format when pipe break is not allowed
+  if (!allowPipeBreak) {
+    cleaned = cleaned.replace(/\|/g, ' ');
+  }
 
   // If text contains explicit newlines '\n' (from Excel Alt+Enter), handle line breaks
   if (cleaned.includes('\n')) {
@@ -780,7 +795,7 @@ function renderChartFormat(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    const lines = wrapText(ctx, item.name, wrapWidth, 6);
+    const lines = wrapText(ctx, item.name, wrapWidth, 6, true);
     lines.forEach((line, lIdx) => {
       drawTextLineBounded(ctx, line, centerX, chartBottom + 16 + lIdx * lineStepY, colGap - 16, itemNameFontSize);
     });
@@ -1191,7 +1206,7 @@ function renderCombinationFormat(
   const maxComboLineCount = Math.max(
     ...top10.map((item) => {
       ctx.font = 'bold 32px "Inter", "Inter", "SVN-Mont", sans-serif';
-      return wrapText(ctx, item.name, wrapWidth, 6).length;
+      return wrapText(ctx, item.name, wrapWidth, 6, true).length;
     }),
     1
   );
@@ -1270,7 +1285,7 @@ function renderCombinationFormat(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    const lines = wrapText(ctx, item.name, wrapWidth, 6);
+    const lines = wrapText(ctx, item.name, wrapWidth, 6, true);
     lines.forEach((line, lIdx) => {
       drawTextLineBounded(ctx, line, centerX, comboStartY + lIdx * comboLineStepY, colGap - 12, comboNameFontSize);
     });
@@ -1314,15 +1329,26 @@ function renderCombinationFormat(
     ctx.stroke();
     ctx.restore();
 
-    // Draw Data Nodes (Full Solid Orange Fill #E68228) & Alternating Value Labels (36px clearance offset)
+    // Draw Data Nodes (Full Solid Orange Fill #E68228) & Slope-Aware Value Labels with White Halo Mask
     nodePoints.forEach((pt, i) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 14, 0, Math.PI * 2);
       ctx.fillStyle = '#E68228';
       ctx.fill();
 
-      // Alternating label placement (above / below node) with 36px clearance offset to prevent text-node collision
       let isAbove = i % 2 === 0;
+
+      const nextPt = nodePoints[i + 1];
+      const prevPt = nodePoints[i - 1];
+
+      // Slope check: If next segment drops steeply (nextPt.y > pt.y + 35), place label ABOVE so downward line doesn't cut through text!
+      if (nextPt && nextPt.y > pt.y + 35) {
+        isAbove = true;
+      }
+      // If previous segment dropped steeply from above (prevPt.y < pt.y - 35), place label ABOVE
+      else if (prevPt && prevPt.y < pt.y - 35) {
+        isAbove = true;
+      }
 
       // Safety bounds check to avoid frame border collision
       if (pt.visualRatio < 0.15 && !isAbove && pt.y > 2150) {
@@ -1332,12 +1358,24 @@ function renderCombinationFormat(
       }
 
       const labelY = isAbove ? pt.y - 36 : pt.y + 36;
+      const textStr = formatThousands(pt.val);
 
+      ctx.save();
       ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
-      ctx.fillStyle = '#1A1A1A';
       ctx.textAlign = 'center';
       ctx.textBaseline = isAbove ? 'bottom' : 'top';
-      ctx.fillText(formatThousands(pt.val), pt.x, labelY);
+
+      // 1. White stroke halo mask (lineWidth 12px) to wipe out any intersecting line segment behind digits
+      ctx.strokeStyle = '#FFFFFF';
+      ctx.lineWidth = 12;
+      ctx.lineJoin = 'round';
+      ctx.miterLimit = 2;
+      ctx.strokeText(textStr, pt.x, labelY);
+
+      // 2. Dark crisp text fill
+      ctx.fillStyle = '#1A1A1A';
+      ctx.fillText(textStr, pt.x, labelY);
+      ctx.restore();
     });
   }
 }

@@ -72,8 +72,14 @@ export async function exportAll12ReportsZip(
       });
 
       if (blob) {
-        const fileName = `BSI_TOP10_${category}_${format}_THANG_${currentMetadata.month}_${currentMetadata.year}.png`;
-        zip.file(fileName, blob);
+        const folderNameMap: Record<FormatType, string> = {
+          CHART: 'Chart',
+          TABLE: 'Table',
+          COMBINATION: 'Combo',
+        };
+        const folderName = folderNameMap[format];
+        const fileName = `BSI_TOP10_${category}_${folderName}_THANG_${currentMetadata.month}_${currentMetadata.year}.png`;
+        zip.folder(folderName)?.file(fileName, blob);
       }
     }
   }
