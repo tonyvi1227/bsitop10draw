@@ -1279,9 +1279,9 @@ function renderCombinationFormat(
     });
   });
 
-  // Bottom Chart Line Trend inside lower frame (trendTop=1840, trendBottom=2260)
-  const trendTop = 1840;
-  const trendBottom = 2260;
+  // Bottom Chart Line Trend inside lower frame (Safe bounds: trendTop=1820, trendBottom=2200)
+  const trendTop = 1820;
+  const trendBottom = 2200;
   const trendH = trendBottom - trendTop;
 
   const quValues = top10.map((item) => (item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0)));
@@ -1289,15 +1289,17 @@ function renderCombinationFormat(
   const minQu = Math.min(...quValues, 0);
   const rangeQu = maxQu - minQu || 1;
 
-  const nodePoints: { x: number; y: number; val: number }[] = [];
+  const nodePoints: { x: number; y: number; val: number; visualRatio: number }[] = [];
 
   top10.forEach((item, idx) => {
     const centerX = columnCentersX[idx] || (chartLeft + idx * colGap + colGap / 2);
     const val = item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0);
-    const ratio = (val - minQu) / rangeQu;
-    const paddingY = 40;
-    const posY = trendBottom - paddingY - ratio * (trendH - paddingY * 2);
-    nodePoints.push({ x: centerX, y: posY, val });
+    const rawRatio = Math.max(0, Math.min(1, (val - minQu) / rangeQu));
+    // Power scaling (0.65) ensures visual differentiation even when max value is 100x min value
+    const visualRatio = Math.pow(rawRatio, 0.65);
+    const paddingY = 30;
+    const posY = trendBottom - paddingY - visualRatio * (trendH - paddingY * 2);
+    nodePoints.push({ x: centerX, y: posY, val, visualRatio });
   });
 
   // Draw Connected Straight Line Segments (LineWidth 6pt for bolder look (+2pt))
@@ -1315,17 +1317,27 @@ function renderCombinationFormat(
     ctx.stroke();
     ctx.restore();
 
-    // Draw Data Nodes (Full Solid Orange Fill #E68228) & Alternating Value Labels (40px Bold)
+    // Draw Data Nodes (Full Solid Orange Fill #E68228) & Smart Value Labels
     nodePoints.forEach((pt, i) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 14, 0, Math.PI * 2);
       ctx.fillStyle = '#E68228';
       ctx.fill();
 
-      const isAbove = i % 2 === 0;
-      const labelY = isAbove ? pt.y - 36 : pt.y + 36;
+      // Smart label placement:
+      // Nodes in lower region (visualRatio < 0.35) -> force label ABOVE node to prevent bottom border overflow
+      // Nodes in upper region (visualRatio > 0.75) -> force label BELOW node to prevent top border overflow
+      // Middle region -> alternate i % 2 === 0
+      let isAbove = i % 2 === 0;
+      if (pt.visualRatio < 0.35) {
+        isAbove = true;
+      } else if (pt.visualRatio > 0.75) {
+        isAbove = false;
+      }
 
-      ctx.font = 'bold 40px "Inter", "Inter", "SVN-Mont", sans-serif';
+      const labelY = isAbove ? pt.y - 24 : pt.y + 24;
+
+      ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
       ctx.fillStyle = '#1A1A1A';
       ctx.textAlign = 'center';
       ctx.textBaseline = isAbove ? 'bottom' : 'top';
