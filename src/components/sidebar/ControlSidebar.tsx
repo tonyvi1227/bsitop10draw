@@ -47,6 +47,29 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
     setItems(updated);
   };
 
+  const getItemFormatName = (item: BsiItem, format: FormatType): string => {
+    if (format === 'TABLE') return item.tableName !== undefined ? item.tableName : item.name;
+    if (format === 'CHART') return item.chartName !== undefined ? item.chartName : item.name;
+    if (format === 'COMBINATION') return item.comboName !== undefined ? item.comboName : item.name;
+    return item.name;
+  };
+
+  const handleItemFormatNameChange = (index: number, format: FormatType, value: string) => {
+    const updated = [...items];
+    const item = { ...updated[index] };
+    if (format === 'TABLE') {
+      item.tableName = value;
+    } else if (format === 'CHART') {
+      item.chartName = value;
+    } else if (format === 'COMBINATION') {
+      item.comboName = value;
+    } else {
+      item.name = value;
+    }
+    updated[index] = item;
+    setItems(updated);
+  };
+
   const handleImageUpload = (index: number, file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -239,18 +262,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
           </>
         )}
 
-        {/* Top 10 Editor Section Header when in onlyTop10Edit mode */}
-        {onlyTop10Edit && (
-          <div className="p-3 bg-slate-800/80 border border-slate-700/80 rounded-xl flex items-center justify-between">
-            <span className="text-xs font-bold text-buzz-lightOrange flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-buzz-orange" />
-              Chỉnh Sửa Chi Tiết Top 10 ({metadata.category})
-            </span>
-            <span className="text-[10px] text-slate-400 font-semibold px-2 py-0.5 rounded bg-slate-900 border border-slate-700">
-              {metadata.format}
-            </span>
-          </div>
-        )}
+
 
         {/* Dynamic Content based on Active Tab */}
         {activeTab === 'BULK' ? (
@@ -271,7 +283,7 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
           </div>
         ) : (
           /* Manual Edit Mode */
-          <div className="space-y-3 pt-2 border-t border-slate-800">
+          <div className={`space-y-3 ${onlyTop10Edit ? '' : 'pt-2 border-t border-slate-800'}`}>
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                 <Sparkles className="w-3.5 h-3.5 text-buzz-orange" />
@@ -285,55 +297,66 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               </button>
             </div>
 
-            <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
+            <div className="space-y-3 overflow-y-auto pr-1 flex-1">
               {items.slice(0, 10).map((item, idx) => {
                 const isExpanded = expandedIndex === idx;
+                const avatarSrc = item.croppedImageData || item.imageUrl;
 
                 return (
                   <div
                     key={idx}
-                    className="rounded-xl bg-slate-800/60 border border-slate-700/60 overflow-hidden transition"
+                    className="rounded-xl bg-slate-800/80 border border-slate-700/80 p-3 space-y-2.5 shadow-sm transition"
                   >
-                    {/* Item Row Main Header: Rank | Name | BSI Score | Content from QU */}
-                    <div className="p-3 flex items-center justify-between gap-2">
-                      <span className="w-6 h-6 rounded-full bg-buzz-orange/20 text-buzz-orange font-bold text-xs flex items-center justify-center border border-buzz-orange/40 shrink-0">
+                    {/* ROW 1: Rank Circle + Brand & Name Inputs + Edit Detail Arrow */}
+                    <div className="flex items-center gap-2">
+                      <span className="w-6 h-6 rounded-full bg-buzz-orange/20 text-buzz-orange font-extrabold text-xs flex items-center justify-center border border-buzz-orange/40 shrink-0">
                         {item.rank}
                       </span>
-                      
-                      {/* Name / Brand Input (Hỗ trợ nút Enter xuống dòng trực tiếp!) */}
+
                       {metadata.category === 'CAMPAIGNS' ? (
-                        <div className="flex-1 flex gap-1.5 min-w-0">
+                        <div className="flex-1 flex gap-2 min-w-0">
                           <textarea
                             rows={2}
                             value={item.brandName || ''}
                             onChange={(e) => handleItemChange(idx, 'brandName', e.target.value)}
-                            className="w-1/3 bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none"
+                            className="w-1/3 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none leading-snug"
                             placeholder="Brand"
-                            title="Tên Thương Hiệu (Brand) - Nhấn Enter để xuống dòng"
+                            title="Tên Thương Hiệu (Brand)"
                           />
                           <textarea
                             rows={2}
-                            value={item.name}
-                            onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
-                            className="flex-1 bg-slate-900 border border-slate-700 rounded-md px-2 py-1 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none"
-                            placeholder="Chiến dịch (Nhấn Enter xuống dòng)"
-                            title="Tên Chiến Dịch - Nhấn Enter để ngắt dòng chủ động"
+                            value={getItemFormatName(item, metadata.format)}
+                            onChange={(e) => handleItemFormatNameChange(idx, metadata.format, e.target.value)}
+                            className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none leading-snug"
+                            placeholder={`Chiến dịch (${metadata.format})`}
+                            title={`Tên Chiến Dịch (${metadata.format})`}
                           />
                         </div>
                       ) : (
                         <textarea
                           rows={2}
-                          value={item.name}
-                          onChange={(e) => handleItemChange(idx, 'name', e.target.value)}
-                          className="flex-1 bg-slate-900 border border-slate-700 rounded-md px-2.5 py-1 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none"
-                          placeholder="Tên đối tượng (Nhấn Enter xuống dòng)"
-                          title="Tên đối tượng - Nhấn Enter để ngắt dòng chủ động"
+                          value={getItemFormatName(item, metadata.format)}
+                          onChange={(e) => handleItemFormatNameChange(idx, metadata.format, e.target.value)}
+                          className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-white focus:outline-none focus:border-buzz-orange min-w-0 resize-none leading-snug"
+                          placeholder={`Tên đối tượng (${metadata.format})`}
+                          title={`Tên đối tượng (${metadata.format})`}
                         />
                       )}
 
-                      {/* BSI Score Input */}
-                      <div className="w-[72px] shrink-0">
-                        <span className="text-[9px] text-slate-400 block text-center font-semibold mb-0.5">BSI</span>
+                      <button
+                        onClick={() => setExpandedIndex(isExpanded ? null : idx)}
+                        className="p-2 hover:bg-slate-700/80 rounded-lg text-slate-400 hover:text-white shrink-0 self-center transition border border-slate-700/50"
+                        title="Chỉnh sửa chi tiết chỉ số & Tên riêng theo Bảng"
+                      >
+                        {isExpanded ? <ChevronUp className="w-4 h-4 text-buzz-orange" /> : <ChevronDown className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                    {/* ROW 2: BSI Input + Content QU Input + Image Avatar Upload/Crop Controls */}
+                    <div className="flex items-center gap-2.5 pt-1 border-t border-slate-700/40">
+                      {/* BSI Score */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] text-slate-400 font-bold block mb-0.5 uppercase tracking-wide">BSI Score</span>
                         <input
                           type="number"
                           step="0.1"
@@ -341,138 +364,184 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
                           onChange={(e) =>
                             handleItemChange(idx, 'bsiScore', parseFloat(e.target.value) || 0)
                           }
-                          className="w-full bg-slate-900 border border-slate-700 rounded-md px-1.5 py-1 text-xs font-bold text-buzz-orange text-right focus:outline-none focus:border-buzz-orange"
+                          className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs font-extrabold text-buzz-orange text-right focus:outline-none focus:border-buzz-orange"
                           placeholder="BSI"
                         />
                       </div>
 
-                      {/* Content from QU Input (Dedicated Field Right on Item Row!) */}
-                      <div className="w-[82px] shrink-0">
-                        <span className="text-[9px] text-sky-400 block text-center font-semibold mb-0.5">Content QU</span>
+                      {/* Content QU */}
+                      <div className="flex-1 min-w-0">
+                        <span className="text-[10px] text-sky-400 font-bold block mb-0.5 uppercase tracking-wide">Content QU</span>
                         <input
                           type="number"
                           value={item.contentFromQu}
                           onChange={(e) =>
                             handleItemChange(idx, 'contentFromQu', parseInt(e.target.value) || 0)
                           }
-                          className="w-full bg-slate-900 border border-sky-500/50 rounded-md px-1.5 py-1 text-xs font-bold text-sky-400 text-right focus:outline-none focus:border-sky-400"
+                          className="w-full bg-slate-900 border border-sky-500/40 rounded-lg px-2.5 py-1 text-xs font-extrabold text-sky-400 text-right focus:outline-none focus:border-sky-400"
                           placeholder="Content QU"
                         />
                       </div>
 
-                      <button
-                        onClick={() => setExpandedIndex(isExpanded ? null : idx)}
-                        className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white shrink-0 mt-3"
-                        title="Mở rộng thêm chỉ số"
-                      >
-                        {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                      </button>
-                    </div>
-
-                    {/* Expanded Additional Metrics */}
-                    {isExpanded && (
-                      <div className="p-3 bg-slate-900/80 border-t border-slate-700/50 grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-[10px] text-slate-400 block mb-0.5">Buzz Volume</span>
-                          <input
-                            type="number"
-                            value={item.buzzVolume}
-                            onChange={(e) =>
-                              handleItemChange(idx, 'buzzVolume', parseInt(e.target.value) || 0)
-                            }
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 block mb-0.5">Qualified User</span>
-                          <input
-                            type="number"
-                            value={item.qualifiedUser}
-                            onChange={(e) =>
-                              handleItemChange(idx, 'qualifiedUser', parseInt(e.target.value) || 0)
-                            }
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 block mb-0.5">Earned Media (%)</span>
-                          <input
-                            type="number"
-                            value={item.earnedMedia}
-                            onChange={(e) =>
-                              handleItemChange(idx, 'earnedMedia', parseInt(e.target.value) || 0)
-                            }
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 block mb-0.5">Sentiment Index</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={item.sentimentScore}
-                            onChange={(e) =>
-                              handleItemChange(idx, 'sentimentScore', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
-                          />
-                        </div>
-                        <div>
-                          <span className="text-[10px] text-slate-400 block mb-0.5">Relevance Score</span>
-                          <input
-                            type="number"
-                            step="0.01"
-                            value={item.relevanceScore}
-                            onChange={(e) =>
-                              handleItemChange(idx, 'relevanceScore', parseFloat(e.target.value) || 0)
-                            }
-                            className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Avatar Upload Footer */}
-                    <div className="px-3 py-1.5 bg-slate-900/40 border-t border-slate-700/30 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400 flex items-center gap-1">
-                        <ImageIcon className="w-3 h-3 text-slate-400" /> Image/Logo:
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {(item.croppedImageData || item.imageUrl) && (
-                          <button
-                            onClick={() => {
-                              const src = item.croppedImageData || item.imageUrl;
-                              if (src) {
+                      {/* Image / Logo Upload & Crop Controls */}
+                      <div className="shrink-0 flex items-center gap-1.5 self-end">
+                        {avatarSrc ? (
+                          <div className="flex items-center gap-1.5">
+                            <img
+                              src={avatarSrc}
+                              alt="Avatar"
+                              className="w-7 h-7 rounded-full object-cover border border-buzz-orange/60"
+                            />
+                            <button
+                              onClick={() => {
                                 setCropperState({
                                   isOpen: true,
-                                  imageSrc: src,
+                                  imageSrc: avatarSrc,
                                   rankIndex: idx,
                                   rankName: `Top ${item.rank} - ${item.name}`,
                                 });
-                              }
-                            }}
-                            className="px-2 py-0.5 rounded bg-buzz-orange/20 hover:bg-buzz-orange/30 text-buzz-orange border border-buzz-orange/40 text-[10px] font-bold flex items-center gap-1 transition"
-                            title="Crop & Scale ảnh"
-                          >
-                            <Crop className="w-3 h-3" />
-                            <span>Crop & Scale</span>
-                          </button>
+                              }}
+                              className="p-1 rounded bg-buzz-orange/20 hover:bg-buzz-orange/30 text-buzz-orange border border-buzz-orange/40 text-[10px] font-bold transition"
+                              title="Crop & Scale ảnh"
+                            >
+                              <Crop className="w-3.5 h-3.5" />
+                            </button>
+                            <label className="cursor-pointer text-[10px] font-bold text-slate-300 hover:text-white bg-slate-900 px-2 py-1 rounded-lg border border-slate-700">
+                              <span>Đổi</span>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  if (e.target.files?.[0]) {
+                                    handleImageUpload(idx, e.target.files[0]);
+                                  }
+                                }}
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="cursor-pointer text-[10px] font-bold text-buzz-lightOrange hover:text-buzz-orange bg-slate-900 px-2.5 py-1 rounded-lg border border-slate-700 flex items-center gap-1">
+                            <ImageIcon className="w-3 h-3 text-buzz-orange" />
+                            <span>Ảnh</span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files?.[0]) {
+                                  handleImageUpload(idx, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
                         )}
-                        <label className="cursor-pointer text-[10px] font-semibold text-buzz-lightOrange hover:text-buzz-orange bg-slate-900 px-2 py-0.5 rounded border border-slate-700">
-                          <span>{item.croppedImageData || item.imageUrl ? 'Đổi ảnh' : 'Upload ảnh'}</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files?.[0]) {
-                                handleImageUpload(idx, e.target.files[0]);
-                              }
-                            }}
-                          />
-                        </label>
                       </div>
                     </div>
+
+                    {/* Expanded Additional Metrics & Format-Specific Name Overrides */}
+                    {isExpanded && (
+                      <div className="p-3 bg-slate-900/80 border-t border-slate-700/50 space-y-3 text-xs">
+                        {/* Format-Specific Name Overrides */}
+                        <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-2">
+                          <span className="text-[11px] font-bold text-buzz-orange block">
+                            Tên hiển thị riêng biệt theo Dạng Báo Cáo (Format Name Overrides):
+                          </span>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div>
+                              <span className="text-[10px] text-slate-400 block mb-0.5 font-semibold">📊 Bảng Chart</span>
+                              <input
+                                type="text"
+                                value={item.chartName ?? ''}
+                                onChange={(e) => handleItemChange(idx, 'chartName', e.target.value)}
+                                placeholder={`Mặc định (${item.name})`}
+                                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-medium text-xs focus:border-buzz-orange"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block mb-0.5 font-semibold">📋 Bảng Table</span>
+                              <input
+                                type="text"
+                                value={item.tableName ?? ''}
+                                onChange={(e) => handleItemChange(idx, 'tableName', e.target.value)}
+                                placeholder={`Mặc định (${item.name})`}
+                                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-medium text-xs focus:border-buzz-orange"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[10px] text-slate-400 block mb-0.5 font-semibold">📈 Bảng Combo</span>
+                              <input
+                                type="text"
+                                value={item.comboName ?? ''}
+                                onChange={(e) => handleItemChange(idx, 'comboName', e.target.value)}
+                                placeholder={`Mặc định (${item.name})`}
+                                className="w-full bg-slate-900 border border-slate-700 rounded px-2 py-1 text-white font-medium text-xs focus:border-buzz-orange"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-2">
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Buzz Volume</span>
+                            <input
+                              type="number"
+                              value={item.buzzVolume}
+                              onChange={(e) =>
+                                handleItemChange(idx, 'buzzVolume', parseInt(e.target.value) || 0)
+                              }
+                              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Qualified User</span>
+                            <input
+                              type="number"
+                              value={item.qualifiedUser}
+                              onChange={(e) =>
+                                handleItemChange(idx, 'qualifiedUser', parseInt(e.target.value) || 0)
+                              }
+                              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Earned Media (%)</span>
+                            <input
+                              type="number"
+                              value={item.earnedMedia}
+                              onChange={(e) =>
+                                handleItemChange(idx, 'earnedMedia', parseInt(e.target.value) || 0)
+                              }
+                              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
+                            />
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Sentiment Index</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.sentimentScore}
+                              onChange={(e) =>
+                                handleItemChange(idx, 'sentimentScore', parseFloat(e.target.value) || 0)
+                              }
+                              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <span className="text-[10px] text-slate-400 block mb-0.5">Relevance Score</span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.relevanceScore}
+                              onChange={(e) =>
+                                handleItemChange(idx, 'relevanceScore', parseFloat(e.target.value) || 0)
+                              }
+                              className="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white font-medium"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

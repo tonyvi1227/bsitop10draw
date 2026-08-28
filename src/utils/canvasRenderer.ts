@@ -788,7 +788,8 @@ function renderChartFormat(
     }
     ctx.restore();
 
-    drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, item.name);
+    const displayName = item.chartName !== undefined ? item.chartName : item.name;
+    drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
     // 6. TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS (Hỗ trợ 5-6 dòng, font 30px khi 5-6 dòng, đẩy chart lên trên)
     ctx.font = `bold ${itemNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
@@ -796,7 +797,7 @@ function renderChartFormat(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    const lines = wrapText(ctx, item.name, wrapWidth, 6, true);
+    const lines = wrapText(ctx, displayName, wrapWidth, 6, true);
     lines.forEach((line, lIdx) => {
       drawTextLineBounded(ctx, line, centerX, chartBottom + 16 + lIdx * lineStepY, colGap - 16, itemNameFontSize);
     });
@@ -919,8 +920,9 @@ function renderTableFormat(
   // Check max line count needed across items (including manual line breaks \n or |)
   const maxItemLinesCount = Math.max(
     ...top10.map((i) => {
+      const displayName = i.tableName !== undefined ? i.tableName : i.name;
       ctx.font = 'bold 36px "Inter", "Inter", "SVN-Mont", sans-serif';
-      return wrapText(ctx, i.name || '', 690, 4).length;
+      return wrapText(ctx, displayName || '', 690, 4, false).length;
     }),
     1
   );
@@ -943,6 +945,7 @@ function renderTableFormat(
 
   top10.forEach((item, rIdx) => {
     const rowY = rowCenterY[rIdx] || (685.5 + rIdx * 147);
+    const displayName = item.tableName !== undefined ? item.tableName : item.name;
 
     // 1. Rank Number (Draw only if fallback mode without template image, to avoid duplicate numbers)
     if (!templateImg) {
@@ -964,7 +967,7 @@ function renderTableFormat(
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
-      const brandLines = wrapText(ctx, item.brandName || '', 380, 3);
+      const brandLines = wrapText(ctx, item.brandName || '', 380, 3, false);
       drawMultiLineTextCentered(ctx, brandLines, 265, rowY, 36);
       ctx.restore();
 
@@ -975,7 +978,7 @@ function renderTableFormat(
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
-      const campLines = wrapText(ctx, item.name, 690, 4);
+      const campLines = wrapText(ctx, displayName, 690, 4, false);
       drawMultiLineTextCentered(ctx, campLines, 715, rowY, uniformCampFontSize);
       ctx.restore();
     } else {
@@ -986,7 +989,7 @@ function renderTableFormat(
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
-      const lines = wrapText(ctx, item.name, 1060, 4);
+      const lines = wrapText(ctx, displayName, 1060, 4, false);
       drawMultiLineTextCentered(ctx, lines, 310, rowY, uniformTableFontSize);
       ctx.restore();
     }
@@ -1206,8 +1209,9 @@ function renderCombinationFormat(
   const wrapWidth = 165; // Cố định 165px cho font 32px/30px để tự động ngắt dòng trong cột 233px
   const maxComboLineCount = Math.max(
     ...top10.map((item) => {
+      const displayName = item.comboName !== undefined ? item.comboName : item.name;
       ctx.font = 'bold 32px "Inter", "Inter", "SVN-Mont", sans-serif';
-      return wrapText(ctx, item.name, wrapWidth, 6, true).length;
+      return wrapText(ctx, displayName, wrapWidth, 6, true).length;
     }),
     1
   );
@@ -1246,6 +1250,7 @@ function renderCombinationFormat(
     const centerX = chartLeft + idx * colGap + colGap / 2;
     columnCentersX.push(centerX);
 
+    const displayName = item.comboName !== undefined ? item.comboName : item.name;
     const scoreRatio = maxScore > 0 ? (item.bsiScore / maxScore) : 0;
     const maxBarH = chartH - avatarRadius * 2 - 60;
     const rawBarH = scoreRatio * maxBarH;
@@ -1278,7 +1283,7 @@ function renderCombinationFormat(
     }
     ctx.restore();
 
-    drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, item.name);
+    drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
     // TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS (Hỗ trợ 5-6 dòng, font 30px khi 5-6 dòng, đẩy chart lên trên)
     ctx.font = `bold ${comboNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
@@ -1286,7 +1291,7 @@ function renderCombinationFormat(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    const lines = wrapText(ctx, item.name, wrapWidth, 6, true);
+    const lines = wrapText(ctx, displayName, wrapWidth, 6, true);
     lines.forEach((line, lIdx) => {
       drawTextLineBounded(ctx, line, centerX, comboStartY + lIdx * comboLineStepY, colGap - 12, comboNameFontSize);
     });

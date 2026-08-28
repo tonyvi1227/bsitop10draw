@@ -24,6 +24,9 @@ export interface BsiItem {
   comboLineValue?: number; // Custom value for bottom trendline in COMBINATION format
   imageUrl?: string;
   croppedImageData?: string; // base64 or blob URL of cropped circular image
+  chartName?: string; // Format-specific name override for Chart format
+  tableName?: string; // Format-specific name override for Table format
+  comboName?: string; // Format-specific name override for Combo format
 }
 
 export interface BsiReportMetadata {
