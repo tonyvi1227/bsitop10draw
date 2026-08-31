@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
 import { preloadItemImages, preloadTemplateAssets, renderCanvasReport, ensureFontsLoaded } from '../../utils/canvasRenderer';
 import { exportAll12ReportsZip } from '../../utils/zipExporter';
-import { Download, RefreshCw, ZoomIn, ZoomOut, Maximize2, Archive, BarChart3, Table, Layers, SlidersHorizontal } from 'lucide-react';
+import { Download, RefreshCw, ZoomIn, ZoomOut, Maximize2, Archive, BarChart3, Table, Layers, SlidersHorizontal, Lightbulb } from 'lucide-react';
 import { saveAs } from 'file-saver';
 
 interface ChartCanvasProps {
@@ -278,6 +278,11 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
 
           <span className="text-xs text-slate-400 font-medium hidden lg:inline">
             {baseWidth} x {baseHeight} px (Tháng {metadata.month}/{metadata.year})
+          </span>
+
+          <span className="hidden xl:inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-500/10 border border-amber-500/30 rounded-lg text-[11px] text-amber-300 font-medium">
+            <Lightbulb className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>Mẹo: Gõ <strong className="font-mono text-amber-200">||</strong> hoặc <strong className="font-mono text-amber-200">Enter</strong> để ngắt dòng</span>
           </span>
 
           {isLoadingAssets && (

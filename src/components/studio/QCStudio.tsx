@@ -7,21 +7,27 @@ import {
   Sparkles,
   ZoomIn,
   ZoomOut,
+  Maximize2,
   RefreshCw,
   FileArchive,
   Database,
   Download
 } from 'lucide-react';
 import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
-import { renderCanvasToBlob, downloadCanvasImage } from '../../utils/canvasRenderer';
-import JSZip from 'jszip';
+import { 
+  preloadItemImages, 
+  preloadTemplateAssets, 
+  renderCanvasReport, 
+  ensureFontsLoaded 
+} from '../../utils/canvasRenderer';
+import { exportAll12ReportsZip } from '../../utils/zipExporter';
 import { saveAs } from 'file-saver';
 
 interface QCStudioProps {
   items: BsiItem[];
   allCategoryItems: Record<CategoryType, BsiItem[]>;
   metadata: BsiReportMetadata;
-  templateAssets: Record<string, HTMLImageElement>;
+  templateAssets?: Record<string, HTMLImageElement>;
   onSelectCategory: (cat: CategoryType) => void;
   onSelectFormat: (format: FormatType) => void;
 }
@@ -30,16 +36,37 @@ export const QCStudio: React.FC<QCStudioProps> = ({
   items,
   allCategoryItems,
   metadata,
-  templateAssets,
   onSelectCategory,
   onSelectFormat,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   const [activeCategory, setActiveCategory] = useState<CategoryType>(metadata.category);
   const [activeFormat, setActiveFormat] = useState<FormatType>(metadata.format);
-  const [zoomLevel, setZoomLevel] = useState<number>(1);
-  const [isExportingZip, setIsExportingZip] = useState<boolean>(false);
+  const [zoomScale, setZoomScale] = useState<number>(0.35);
   const [isRendering, setIsRendering] = useState<boolean>(false);
+  const [isExportingSingle, setIsExportingSingle] = useState<boolean>(false);
+
+  // Mouse Drag / Pan State
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0, scrollLeft: 0, scrollTop: 0 });
+
+  // ZIP export progress state
+  const [zipProgress, setZipProgress] = useState<{
+    isExporting: boolean;
+    current: number;
+    total: number;
+    message: string;
+  }>({
+    isExporting: false,
+    current: 0,
+    total: 12,
+    message: '',
+  });
+
+  const baseWidth = activeFormat === 'TABLE' ? 4000 : 3000;
+  const baseHeight = activeFormat === 'COMBINATION' ? 2400 : (activeFormat === 'TABLE' ? 2099 : 2000);
 
   // Keep internal state aligned with props
   useEffect(() => {
@@ -47,25 +74,83 @@ export const QCStudio: React.FC<QCStudioProps> = ({
     setActiveFormat(metadata.format);
   }, [metadata.category, metadata.format]);
 
+  // Adjust zoom auto-fit container
+  const handleAutoFit = () => {
+    if (containerRef.current) {
+      const padding = 48;
+      const containerW = containerRef.current.clientWidth - padding;
+      const containerH = containerRef.current.clientHeight - padding;
+
+      if (containerW > 0 && containerH > 0) {
+        const fitScaleW = containerW / baseWidth;
+        const fitScaleH = containerH / baseHeight;
+        const fitZoom = Math.min(fitScaleW, fitScaleH);
+        const clampedZoom = Number(Math.min(Math.max(fitZoom, 0.15), 1.0).toFixed(2));
+        setZoomScale(clampedZoom);
+
+        setTimeout(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollLeft = (containerRef.current.scrollWidth - containerRef.current.clientWidth) / 2;
+            containerRef.current.scrollTop = (containerRef.current.scrollHeight - containerRef.current.clientHeight) / 2;
+          }
+        }, 50);
+      }
+    }
+  };
+
+  useEffect(() => {
+    handleAutoFit();
+    window.addEventListener('resize', handleAutoFit);
+    return () => window.removeEventListener('resize', handleAutoFit);
+  }, [activeFormat, baseWidth, baseHeight]);
+
   // Render high-res QC canvas whenever category, format or items change
   useEffect(() => {
+    let isCancelled = false;
+
     const renderQC = async () => {
       if (!canvasRef.current) return;
       setIsRendering(true);
 
-      const targetItems = allCategoryItems[activeCategory] || items;
-      const targetMetadata: BsiReportMetadata = {
-        ...metadata,
-        category: activeCategory,
-        format: activeFormat,
-      };
+      try {
+        await ensureFontsLoaded();
+        const targetItems = allCategoryItems[activeCategory] || items;
+        const targetMetadata: BsiReportMetadata = {
+          ...metadata,
+          category: activeCategory,
+          format: activeFormat,
+        };
 
-      await renderCanvasToBlob(canvasRef.current, targetItems, targetMetadata, templateAssets);
-      setIsRendering(false);
+        const [templates, loadedImages] = await Promise.all([
+          preloadTemplateAssets(),
+          preloadItemImages(targetItems),
+        ]);
+
+        if (isCancelled || !canvasRef.current) return;
+
+        await renderCanvasReport({
+          canvas: canvasRef.current,
+          items: targetItems,
+          metadata: targetMetadata,
+          loadedImages,
+          templateAssets: templates,
+          scale: metadata.highDpiScale || 2,
+        });
+      } catch (err) {
+        console.error('QC Render Error:', err);
+      } finally {
+        if (!isCancelled) {
+          setIsRendering(false);
+        }
+      }
     };
 
     renderQC();
-  }, [activeCategory, activeFormat, allCategoryItems, items, metadata, templateAssets]);
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [activeCategory, activeFormat, allCategoryItems, items, metadata]);
 
   const handleCategoryChange = (cat: CategoryType) => {
     setActiveCategory(cat);
@@ -77,43 +162,93 @@ export const QCStudio: React.FC<QCStudioProps> = ({
     onSelectFormat(fmt);
   };
 
-  const handleDownloadSinglePNG = () => {
-    if (!canvasRef.current) return;
-    const filename = `BSITOP10_${activeCategory}_${activeFormat}_${metadata.month}-${metadata.year}.png`;
-    downloadCanvasImage(canvasRef.current, filename);
+  // Drag & Pan handlers
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!containerRef.current) return;
+    setIsPanning(true);
+    setPanStart({
+      x: e.pageX,
+      y: e.pageY,
+      scrollLeft: containerRef.current.scrollLeft,
+      scrollTop: containerRef.current.scrollTop,
+    });
   };
 
-  const handleDownloadAll12ZIP = async () => {
-    setIsExportingZip(true);
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!isPanning || !containerRef.current) return;
+    e.preventDefault();
+    const walkX = e.pageX - panStart.x;
+    const walkY = e.pageY - panStart.y;
+    containerRef.current.scrollLeft = panStart.scrollLeft - walkX;
+    containerRef.current.scrollTop = panStart.scrollTop - walkY;
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsPanning(false);
+  };
+
+  // Export Single PNG at full high DPI
+  const handleDownloadSinglePNG = async () => {
+    setIsExportingSingle(true);
     try {
-      const zip = new JSZip();
-      const categories: CategoryType[] = ['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'];
-      const formats: FormatType[] = ['CHART', 'TABLE', 'COMBINATION'];
+      await ensureFontsLoaded();
+      const targetItems = allCategoryItems[activeCategory] || items;
+      const targetMetadata: BsiReportMetadata = {
+        ...metadata,
+        category: activeCategory,
+        format: activeFormat,
+        highDpiScale: metadata.highDpiScale || 2,
+      };
 
-      const offscreenCanvas = document.createElement('canvas');
+      const [templates, loadedImages] = await Promise.all([
+        preloadTemplateAssets(),
+        preloadItemImages(targetItems),
+      ]);
 
-      for (const cat of categories) {
-        const catItems = allCategoryItems[cat] || [];
-        const folder = zip.folder(cat);
+      const offscreen = document.createElement('canvas');
+      await renderCanvasReport({
+        canvas: offscreen,
+        items: targetItems,
+        metadata: targetMetadata,
+        loadedImages,
+        templateAssets: templates,
+        scale: targetMetadata.highDpiScale,
+      });
 
-        for (const fmt of formats) {
-          const meta: BsiReportMetadata = { ...metadata, category: cat, format: fmt };
-          const blob = await renderCanvasToBlob(offscreenCanvas, catItems, meta, templateAssets);
-
-          const fmtName = fmt === 'CHART' ? '01_CHART' : fmt === 'TABLE' ? '02_TABLE' : '03_COMBO';
-          const filename = `BSITOP10_${cat}_${fmtName}_${metadata.month}-${metadata.year}.png`;
-          if (folder) {
-            folder.file(filename, blob);
+      offscreen.toBlob(
+        (blob) => {
+          if (blob) {
+            const filename = `BSITOP10_${activeCategory}_${activeFormat}_${metadata.month}-${metadata.year}.png`;
+            saveAs(blob, filename);
           }
-        }
-      }
+          setIsExportingSingle(false);
+        },
+        'image/png',
+        1.0
+      );
+    } catch (err) {
+      console.error('Download PNG Error:', err);
+      setIsExportingSingle(false);
+    }
+  };
 
-      const content = await zip.generateAsync({ type: 'blob' });
-      saveAs(content, `BSI_TOP10_TRON_BO_12_ANH_QC_${metadata.month}_${metadata.year}.zip`);
+  // Export All 12 Reports ZIP
+  const handleDownloadAll12ZIP = async () => {
+    setZipProgress({ isExporting: true, current: 0, total: 12, message: 'Bắt đầu kết xuất 12 báo cáo...' });
+    try {
+      await ensureFontsLoaded();
+      await exportAll12ReportsZip(
+        metadata,
+        items,
+        (current, total, message) => {
+          setZipProgress({ isExporting: true, current, total, message });
+        },
+        allCategoryItems
+      );
+      setZipProgress({ isExporting: false, current: 12, total: 12, message: 'Đã hoàn tất xuất 12 ảnh ZIP!' });
     } catch (err) {
       console.error('ZIP Export Error:', err);
-    } finally {
-      setIsExportingZip(false);
+      setZipProgress({ isExporting: false, current: 0, total: 12, message: 'Có lỗi xảy ra khi nén file ZIP.' });
     }
   };
 
@@ -129,10 +264,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
           </div>
           <div>
             <h1 className="text-sm font-bold text-white flex items-center gap-2">
-              Bước 3: QC và Xuất Ảnh BSI TOP10 (Quality Control & Export Station)
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-mono font-semibold border border-emerald-500/30">
-                READY FOR EXPORT
-              </span>
+              Bước 3: QC và Xuất Ảnh BSI TOP10
             </h1>
             <p className="text-xs text-slate-400">
               Đối chiếu bảng số liệu Data thực tế với ảnh render đồ họa 4K trước khi bấm xuất file PNG / ZIP
@@ -144,18 +276,23 @@ export const QCStudio: React.FC<QCStudioProps> = ({
         <div className="flex items-center gap-2">
           <button
             onClick={handleDownloadSinglePNG}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700 shadow-sm"
+            disabled={isExportingSingle}
+            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-2 border border-slate-700 shadow-sm disabled:opacity-50"
           >
-            <Download className="w-4 h-4 text-buzz-orange" />
+            {isExportingSingle ? (
+              <RefreshCw className="w-4 h-4 animate-spin text-buzz-orange" />
+            ) : (
+              <Download className="w-4 h-4 text-buzz-orange" />
+            )}
             <span>Xuất 1 Ảnh PNG</span>
           </button>
 
           <button
             onClick={handleDownloadAll12ZIP}
-            disabled={isExportingZip}
+            disabled={zipProgress.isExporting}
             className="px-4 py-2 bg-buzz-orange hover:bg-buzz-orange-dark text-white rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-md shadow-buzz-orange/20 disabled:opacity-50"
           >
-            {isExportingZip ? (
+            {zipProgress.isExporting ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
               <FileArchive className="w-4 h-4" />
@@ -165,12 +302,35 @@ export const QCStudio: React.FC<QCStudioProps> = ({
         </div>
       </div>
 
+      {/* ZIP Export Progress Banner */}
+      {zipProgress.isExporting && (
+        <div className="bg-slate-900/90 border-b border-buzz-orange/40 px-6 py-2.5 flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-3">
+            <RefreshCw className="w-4 h-4 text-buzz-orange animate-spin" />
+            <span className="text-xs font-semibold text-slate-200">
+              {zipProgress.message}
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="w-48 bg-slate-800 rounded-full h-2 overflow-hidden border border-slate-700">
+              <div
+                className="bg-buzz-orange h-full transition-all duration-300"
+                style={{ width: `${(zipProgress.current / zipProgress.total) * 100}%` }}
+              />
+            </div>
+            <span className="text-xs font-bold text-buzz-orange">
+              {zipProgress.current}/{zipProgress.total}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* QC Studio Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Side: Compact Controls & Highlighted Live Data Inspector Panel */}
-        <div className="w-[450px] bg-slate-900/90 border-r border-slate-800 p-4 flex flex-col gap-3 shrink-0">
+        <div className="w-[440px] bg-slate-900/90 border-r border-slate-800 p-4 flex flex-col gap-3 shrink-0">
           
-          {/* Compact Category & Format Controls (Inline & Space Saving) */}
+          {/* Compact Category & Format Controls */}
           <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2 shrink-0">
             {/* Category Selector */}
             <div className="flex items-center gap-2">
@@ -221,16 +381,13 @@ export const QCStudio: React.FC<QCStudioProps> = ({
             </div>
           </div>
 
-          {/* HIGHLIGHTED LIVE DATA TABLE INSPECTOR (Takes up full height so all 10 rows are visible!) */}
+          {/* HIGHLIGHTED LIVE DATA TABLE INSPECTOR */}
           <div className="flex-1 flex flex-col space-y-2 min-h-0 bg-slate-950 p-3 rounded-xl border border-slate-800">
             <div className="flex items-center justify-between shrink-0">
               <h3 className="text-xs font-bold uppercase tracking-wider text-white flex items-center gap-1.5">
                 <Database className="w-4 h-4 text-buzz-orange" />
                 Bảng Data Kiểm Tra Số Liệu ({activeCategory})
               </h3>
-              <span className="text-[10px] text-emerald-400 font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30">
-                10 Rows Ready
-              </span>
             </div>
 
             {/* Scrollable Data Table */}
@@ -290,32 +447,46 @@ export const QCStudio: React.FC<QCStudioProps> = ({
             <span className="font-semibold text-slate-400">Tỷ lệ xem Canvas</span>
             <div className="flex items-center gap-1">
               <button
-                onClick={() => setZoomLevel((z) => Math.max(0.5, z - 0.25))}
-                className="p-1 hover:bg-slate-800 rounded text-slate-300"
+                onClick={() => setZoomScale((z) => Math.max(0.15, z - 0.05))}
+                className="p-1 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition"
+                title="Thu nhỏ"
               >
                 <ZoomOut className="w-4 h-4" />
               </button>
-              <span className="font-mono text-buzz-orange font-bold px-1">{Math.round(zoomLevel * 100)}%</span>
+              <span className="font-mono text-buzz-orange font-bold px-1 min-w-[45px] text-center">
+                {Math.round(zoomScale * 100)}%
+              </span>
               <button
-                onClick={() => setZoomLevel((z) => Math.min(2.5, z + 0.25))}
-                className="p-1 hover:bg-slate-800 rounded text-slate-300"
+                onClick={() => setZoomScale((z) => Math.min(1.0, z + 0.05))}
+                className="p-1 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition"
+                title="Phóng to"
               >
                 <ZoomIn className="w-4 h-4" />
               </button>
               <button
-                onClick={() => setZoomLevel(1)}
-                className="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded text-white font-mono ml-1"
+                onClick={handleAutoFit}
+                className="p-1 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition border-l border-slate-800 ml-1 pl-2"
+                title="Vừa màn hình (Auto Fit)"
               >
-                Fit
+                <Maximize2 className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Center High-Res Canvas Viewport (Highlighted) */}
-        <div className="flex-1 bg-slate-950 p-6 flex flex-col items-center justify-center overflow-auto relative">
+        {/* Center High-Res Canvas Viewport with Drag/Pan */}
+        <div
+          ref={containerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUpOrLeave}
+          onMouseLeave={handleMouseUpOrLeave}
+          className={`flex-1 bg-slate-950 p-8 flex items-center justify-center overflow-auto relative select-none ${
+            isPanning ? 'cursor-grabbing' : 'cursor-grab'
+          }`}
+        >
           {isRendering && (
-            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-20">
+            <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-20 pointer-events-none">
               <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 px-4 py-3 rounded-xl shadow-2xl">
                 <RefreshCw className="w-5 h-5 text-buzz-orange animate-spin" />
                 <span className="text-xs font-bold text-white">Đang Render Hình Ảnh 4K QC...</span>
@@ -324,10 +495,22 @@ export const QCStudio: React.FC<QCStudioProps> = ({
           )}
 
           <div
-            className="relative transition-transform duration-200 shadow-2xl rounded-lg border border-slate-800/80 overflow-hidden bg-white"
-            style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center' }}
+            className="shadow-2xl rounded-2xl transition-transform duration-200 ease-out border border-slate-700/60 overflow-hidden shrink-0 bg-white"
+            style={{
+              width: baseWidth * zoomScale,
+              height: baseHeight * zoomScale,
+            }}
           >
-            <canvas ref={canvasRef} className="block max-w-full max-h-[80vh] object-contain" />
+            <canvas
+              ref={canvasRef}
+              className="w-full h-full object-contain block"
+              style={{
+                width: `${baseWidth}px`,
+                height: `${baseHeight}px`,
+                transform: `scale(${zoomScale})`,
+                transformOrigin: 'top left',
+              }}
+            />
           </div>
         </div>
       </div>

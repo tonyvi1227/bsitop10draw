@@ -5,14 +5,15 @@ import { DataStudio } from './components/studio/DataStudio';
 import { ChartCanvas } from './components/canvas/ChartCanvas';
 import { ControlSidebar } from './components/sidebar/ControlSidebar';
 import { QCStudio } from './components/studio/QCStudio';
-import { UserGuide } from './components/studio/UserGuide';
+import { UserGuideModal } from './components/studio/UserGuide';
 import { Database, Sparkles, ShieldCheck, BookOpen } from 'lucide-react';
 
 import { autoMatchCachedAvatars } from './utils/avatarCache';
 
 export const App: React.FC = () => {
-  const [mainMode, setMainMode] = useState<'DATA_STUDIO' | 'GRAPHIC_STUDIO' | 'QC_STUDIO' | 'GUIDE'>('DATA_STUDIO');
+  const [mainMode, setMainMode] = useState<'DATA_STUDIO' | 'GRAPHIC_STUDIO' | 'QC_STUDIO'>('DATA_STUDIO');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+  const [isGuideOpen, setIsGuideOpen] = useState<boolean>(false);
 
   const [metadata, setMetadata] = useState<BsiReportMetadata>({
     category: 'CAMPAIGNS',
@@ -92,54 +93,54 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Studio Mode Tabs */}
-        <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
-          <button
-            onClick={() => setMainMode('DATA_STUDIO')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              mainMode === 'DATA_STUDIO'
-                ? 'bg-buzz-orange text-white shadow-md shadow-buzz-orange/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5" />
-            <span>1. Nhập Liệu Data</span>
-          </button>
+        {/* Studio Mode Tabs & Guide Button */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800 gap-1">
+            <button
+              onClick={() => setMainMode('DATA_STUDIO')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+                mainMode === 'DATA_STUDIO'
+                  ? 'bg-buzz-orange text-white shadow-md shadow-buzz-orange/20'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5" />
+              <span>1. Nhập Liệu Data</span>
+            </button>
 
-          <button
-            onClick={() => setMainMode('GRAPHIC_STUDIO')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              mainMode === 'GRAPHIC_STUDIO'
-                ? 'bg-buzz-orange text-white shadow-md shadow-buzz-orange/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>2. Graphic Studio</span>
-          </button>
+            <button
+              onClick={() => setMainMode('GRAPHIC_STUDIO')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+                mainMode === 'GRAPHIC_STUDIO'
+                  ? 'bg-buzz-orange text-white shadow-md shadow-buzz-orange/20'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>2. Graphic Studio</span>
+            </button>
 
-          <button
-            onClick={() => setMainMode('QC_STUDIO')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              mainMode === 'QC_STUDIO'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <ShieldCheck className="w-3.5 h-3.5" />
-            <span>3. QC và Xuất Ảnh</span>
-          </button>
+            <button
+              onClick={() => setMainMode('QC_STUDIO')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
+                mainMode === 'QC_STUDIO'
+                  ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/20'
+                  : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>3. QC và Xuất Ảnh</span>
+            </button>
+          </div>
 
+          {/* Small Guide Popup Button next to Tab Bar */}
           <button
-            onClick={() => setMainMode('GUIDE')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 ${
-              mainMode === 'GUIDE'
-                ? 'bg-sky-600 text-white shadow-md shadow-sky-600/20'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            onClick={() => setIsGuideOpen(true)}
+            className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-700/80 transition flex items-center gap-1.5 shadow-sm"
+            title="Xem Hướng dẫn sử dụng & Mẹo nhanh"
           >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>4. Hướng Dẫn</span>
+            <BookOpen className="w-3.5 h-3.5 text-buzz-orange" />
+            <span>Hướng dẫn sử dụng</span>
           </button>
         </div>
       </header>
@@ -181,7 +182,7 @@ export const App: React.FC = () => {
               />
             </div>
           </div>
-        ) : mainMode === 'QC_STUDIO' ? (
+        ) : (
           <QCStudio
             items={activeItems}
             allCategoryItems={categoryDataStore}
@@ -190,10 +191,11 @@ export const App: React.FC = () => {
             onSelectCategory={(cat) => setMetadata((prev) => ({ ...prev, category: cat }))}
             onSelectFormat={(fmt) => setMetadata((prev) => ({ ...prev, format: fmt }))}
           />
-        ) : (
-          <UserGuide onNavigateToTab={(tab) => setMainMode(tab)} />
         )}
       </main>
+
+      {/* User Guide Modal Popup */}
+      <UserGuideModal isOpen={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </div>
   );
 };

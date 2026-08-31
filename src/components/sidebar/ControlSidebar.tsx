@@ -5,7 +5,7 @@ import { ExcelUpload } from '../upload/ExcelUpload';
 import { BulkImageUpload } from '../upload/BulkImageUpload';
 import { ImageCropperModal } from '../cropper/ImageCropperModal';
 import { saveAvatarToCache } from '../../utils/avatarCache';
-import { BarChart3, Table, Layers, Calendar, Image as ImageIcon, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, UploadCloud, Crop } from 'lucide-react';
+import { BarChart3, Table, Layers, Calendar, Image as ImageIcon, Sparkles, SlidersHorizontal, ChevronDown, ChevronUp, UploadCloud, Crop, Lightbulb, WrapText } from 'lucide-react';
 
 interface ControlSidebarProps {
   metadata: BsiReportMetadata;
@@ -295,6 +295,14 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
               >
                 Reset Sample
               </button>
+            </div>
+
+            {/* Tip for Line Breaks using || or Enter */}
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-2.5 flex items-start gap-2 text-xs text-amber-200">
+              <Lightbulb className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="leading-relaxed text-[11px]">
+                <span className="font-bold text-amber-300">Mẹo ngắt dòng:</span> Dùng ký tự <code className="bg-slate-900 text-buzz-lightOrange font-bold px-1.5 py-0.5 rounded border border-amber-500/30 font-mono">||</code> hoặc phím <code className="bg-slate-900 text-buzz-lightOrange font-bold px-1.5 py-0.5 rounded border border-amber-500/30 font-mono">Enter</code> trong ô tên để ngắt dòng hiển thị trên canvas.
+              </div>
             </div>
 
             <div className="space-y-3 overflow-y-auto pr-1 flex-1">
