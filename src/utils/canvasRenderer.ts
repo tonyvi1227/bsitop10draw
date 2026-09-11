@@ -722,13 +722,13 @@ function renderChartFormat(
   ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subY + 54);
   ctx.restore();
 
-  // 2. THỜI GIAN TRÊN LOGO TOP-RIGHT (Pill slot: centerX=2650, centerY=425)
+  // 2. THỜI GIAN TRÊN LOGO TOP-RIGHT (Sát cạnh phải khoảng trắng của logo: right=2820, centerY=422)
   ctx.save();
-  ctx.font = 'bold 32px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 34px "Inter", "SVN-Mont", sans-serif';
   ctx.fillStyle = '#E68228';
-  ctx.textAlign = 'center';
+  ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
-  ctx.fillText(`${engMonth} ${metadata.year}`, 2650, 425);
+  ctx.fillText(`${engMonth} ${metadata.year}`, 2820, 422);
   ctx.restore();
 
   // 3. CHART COLUMNS & BARS LAYOUT ON 3000x1549
