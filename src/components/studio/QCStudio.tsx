@@ -66,7 +66,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
   });
 
   const baseWidth = activeFormat === 'TABLE' ? 4000 : 3000;
-  const baseHeight = activeFormat === 'COMBINATION' ? 2400 : (activeFormat === 'TABLE' ? 2099 : 2000);
+  const baseHeight = activeFormat === 'COMBINATION' ? 2400 : (activeFormat === 'TABLE' ? 2099 : 1549);
 
   // Keep internal state aligned with props
   useEffect(() => {

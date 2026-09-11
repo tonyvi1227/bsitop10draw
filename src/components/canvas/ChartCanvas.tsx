@@ -211,7 +211,7 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   };
 
   const baseWidth = metadata.format === 'TABLE' ? 4000 : 3000;
-  const baseHeight = metadata.format === 'COMBINATION' ? 2400 : (metadata.format === 'TABLE' ? 2099 : 2000);
+  const baseHeight = metadata.format === 'COMBINATION' ? 2400 : (metadata.format === 'TABLE' ? 2099 : 1549);
 
   return (
     <div className="flex flex-col h-full w-full select-none">

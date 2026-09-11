@@ -35,6 +35,11 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
     TABLE_INFLUENCERS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
     TABLE_CELEBS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-INFLUENCERS-TEMPLATE.png${cacheBuster}`,
     TABLE_SHOWS: `${baseUrl}assets/TABLE TEMPLATE/BSITOP10_Ver2025_TABLE-SHOWS-TEMPLATE.png${cacheBuster}`,
+    CHART_CAMPAIGNS: `${baseUrl}assets/ELEMENT 1 CHART/Template-camp-chart-đơn.jpg${cacheBuster}`,
+    CHART_EVENTS: `${baseUrl}assets/ELEMENT 1 CHART/Template-Event-chart-đơn.jpg${cacheBuster}`,
+    CHART_INFLUENCERS: `${baseUrl}assets/ELEMENT 1 CHART/Template-Celeb-chart-đơn.jpg${cacheBuster}`,
+    CHART_CELEBS: `${baseUrl}assets/ELEMENT 1 CHART/Template-Celeb-chart-đơn.jpg${cacheBuster}`,
+    CHART_SHOWS: `${baseUrl}assets/ELEMENT 1 CHART/Template-Show-chart-đơn.jpg${cacheBuster}`,
     COMBO_CAMPAIGNS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
     COMBO_EVENTS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/EVENT.png${cacheBuster}`,
     COMBO_INFLUENCERS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
@@ -52,20 +57,25 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
         resolve();
       };
       img.onerror = () => {
-        const altUrl = url.includes('%20') ? url.replace(/%20/g, ' ') : url.replace(/ /g, '%20');
-        const img2 = new Image();
-        img2.crossOrigin = 'anonymous';
-        img2.onload = () => {
-          assets[name] = img2;
+        const altUrl = encodeURI(url);
+        if (altUrl !== url) {
+          const img2 = new Image();
+          img2.crossOrigin = 'anonymous';
+          img2.onload = () => {
+            assets[name] = img2;
+            resolve();
+          };
+          img2.onerror = () => {
+            console.error(`Failed to load template asset: ${name} from both ${url} and ${altUrl}`);
+            resolve();
+          };
+          img2.src = altUrl;
+        } else {
+          console.error(`Failed to load template asset: ${name} from ${url}`);
           resolve();
-        };
-        img2.onerror = () => {
-          console.error(`Failed to load template asset: ${name} from both ${url} and ${altUrl}`);
-          resolve();
-        };
-        img2.src = altUrl;
+        }
       };
-      img.src = url;
+      img.src = encodeURI(url);
     });
   });
   await Promise.all(promises);
@@ -563,7 +573,7 @@ export const renderCanvas = async (options: RenderOptions): Promise<void> => {
   const { canvas, items, metadata, loadedImages = {}, templateAssets = {}, scale = 1 } = options;
 
   let baseWidth = 3000;
-  let baseHeight = 2000;
+  let baseHeight = 1549;
 
   if (metadata.format === 'TABLE') {
     baseWidth = 4000;
@@ -600,7 +610,7 @@ export const renderCanvas = async (options: RenderOptions): Promise<void> => {
 };
 
 /**
- * Render DẠNG 1: BSI TOP10 CHART (3000x2000)
+ * Render DẠNG 1: BSI TOP10 CHART (3000x1549 - Template Ver 2026 ELEMENT 1 CHART)
  */
 function renderChartFormat(
   ctx: CanvasRenderingContext2D,
@@ -612,77 +622,79 @@ function renderChartFormat(
   templateAssets: Record<string, HTMLImageElement>
 ) {
   const catConfig = CATEGORY_CONFIG[metadata.category];
-  const titleText = catConfig.titleBadge;
   const monthStr = metadata.month.padStart(2, '0');
+  const engMonth = getEnglishMonth(monthStr);
 
-  const frameX = 100;
-  const frameY = 278;
-  const frameW = 2765;
-  const frameH = 1542;
-  const frameRadius = 60;
-  const strokeWidth = 5;
+  const templateKey = `CHART_${metadata.category}`;
+  let templateImg = templateAssets ? templateAssets[templateKey] : undefined;
+  if (!templateImg && templateAssets) {
+    templateImg = templateAssets.CHART_CAMPAIGNS || templateAssets.CHART_INFLUENCERS || templateAssets.CHART_EVENTS || templateAssets.CHART_SHOWS;
+  }
 
-  ctx.save();
-  ctx.strokeStyle = '#E68228';
-  ctx.lineWidth = strokeWidth;
-  drawRoundedRect(ctx, frameX, frameY, frameW, frameH, frameRadius);
-  ctx.stroke();
-  ctx.restore();
+  if (templateImg) {
+    ctx.drawImage(templateImg, 0, 0, 3000, 1549);
+  } else {
+    // Fallback if template image is not available
+    const frameX = 172;
+    const frameY = 126;
+    const frameW = 2732;
+    const frameH = 1372;
+    const frameRadius = 40;
+    const strokeWidth = 5;
 
-  // 1. TÊN BSI - BUZZMETRICS SOCIAL INDEX (Font: SVN-Mont Weight 700 / Bold, Size 46px - Tăng 15%, giảm weight 1 bậc)
-  const textCenterY = 1050;
-  const gapHeight = 920;
+    ctx.save();
+    ctx.strokeStyle = '#E68228';
+    ctx.lineWidth = strokeWidth;
+    drawRoundedRect(ctx, frameX, frameY, frameW, frameH, frameRadius);
+    ctx.stroke();
+    ctx.restore();
 
-  ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(frameX - strokeWidth - 2, textCenterY - gapHeight / 2, strokeWidth * 2 + 4, gapHeight);
+    // Fallback left vertical text
+    ctx.save();
+    ctx.translate(172, 800);
+    ctx.rotate(-Math.PI / 2);
+    ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
+    ctx.fillStyle = '#E68228';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.letterSpacing = '3px';
+    ctx.fillText('BSI - BUZZMETRICS SOCIAL INDEX', 0, 0);
+    ctx.restore();
 
-  ctx.save();
-  ctx.translate(frameX, textCenterY);
-  ctx.rotate(-Math.PI / 2);
-  ctx.font = 'bold 46px "Inter", "SVN-Mont", sans-serif';
-  ctx.fillStyle = '#E68228';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.letterSpacing = '3px';
-  ctx.fillText('BSI - BUZZMETRICS SOCIAL INDEX', 0, 0);
-  ctx.restore();
+    // Fallback center badge
+    const badgeW = 1400;
+    const badgeH = 152;
+    const badgeX = 1500 - badgeW / 2;
+    const badgeY = 151;
+    ctx.save();
+    const grad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY);
+    grad.addColorStop(0, '#F16522');
+    grad.addColorStop(1, '#FF7E36');
+    ctx.fillStyle = grad;
+    drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, 20);
+    ctx.fill();
+    ctx.fillStyle = BUZZ_COLORS.white;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 84px "Inter", "SVN-Mont", sans-serif';
+    ctx.fillText(catConfig.titleBadge, 1500, badgeY + badgeH / 2);
+    ctx.restore();
+  }
 
-  // 2. TITLE CHÍNH (Badge tiêu đề cam ở giữa: Size 92px, Khung thu ngắn 5% mỗi bên -> 1420px)
-  const badgeW = 1420;
-  const badgeH = 170;
-  const badgeX = 1480 - badgeW / 2;
-  const badgeY = 190;
-  const badgeRadius = 24;
-
-  ctx.save();
-  const grad = ctx.createLinearGradient(badgeX, badgeY, badgeX + badgeW, badgeY);
-  grad.addColorStop(0, '#F16522');
-  grad.addColorStop(1, '#FF7E36');
-
-  ctx.fillStyle = grad;
-  drawRoundedRect(ctx, badgeX, badgeY, badgeW, badgeH, badgeRadius);
-  ctx.fill();
-  ctx.restore();
-
-  ctx.fillStyle = BUZZ_COLORS.white;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = 'bold 92px "Inter", "SVN-Mont", sans-serif';
-  ctx.fillText(titleText, 1480, badgeY + badgeH / 2);
-
-  // 3. TITLE PHỤ (Dòng 1 Size 55px, Dòng 2 Size 46px - Giảm weight 1 mức ngoại trừ Tên Hạng Mục)
-  const subX = 1480;
-  const subY = 395;
+  // 1. SUBTITLE DÒNG 1: 10 {TÊN HẠNG MỤC} NỔI BẬT TRÊN SOCIAL MEDIA
+  const subX = 1500;
+  const subY = 326;
 
   const part1 = '10 ';
   const part2 = catConfig.objectName;
   const part3 = ' NỔI BẬT TRÊN SOCIAL MEDIA';
 
-  ctx.font = '600 55px "Inter", "SVN-Mont", sans-serif';
+  ctx.save();
+  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
   const w1 = ctx.measureText(part1).width;
   const w3 = ctx.measureText(part3).width;
 
-  ctx.font = 'bold 55px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 44px "Inter", "SVN-Mont", sans-serif';
   const w2 = ctx.measureText(part2).width;
 
   const totalW = w1 + w2 + w3;
@@ -692,28 +704,36 @@ function renderChartFormat(
   ctx.textBaseline = 'top';
   ctx.fillStyle = '#1A1A1A';
 
-  ctx.font = '600 55px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
   ctx.fillText(part1, startX, subY);
   startX += w1;
 
-  ctx.font = 'bold 55px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 44px "Inter", "SVN-Mont", sans-serif';
   ctx.fillText(part2, startX, subY);
   startX += w2;
 
-  ctx.font = '600 55px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
   ctx.fillText(part3, startX, subY);
 
-  // Subtitle Dòng 2: THÁNG MM/YYYY (Weight 600, Size 46px)
+  // Subtitle Dòng 2: THÁNG MM/YYYY (Weight 600, Size 36px)
   ctx.textAlign = 'center';
-  ctx.font = '600 46px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 36px "Inter", "SVN-Mont", sans-serif';
   ctx.fillStyle = '#333333';
-  ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subY + 68);
+  ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subY + 54);
+  ctx.restore();
 
-  // 4. THỜI GIAN Logo (Font: SVN-Mont Weight 700, Size 38px, moved right 18px)
-  drawTopRightLogo(ctx, width, metadata, templateAssets, { diameter: 410, centerX: 2758, centerY: 380 });
+  // 2. THỜI GIAN TRÊN LOGO TOP-RIGHT (Pill slot: centerX=2650, centerY=425)
+  ctx.save();
+  ctx.font = 'bold 32px "Inter", "SVN-Mont", sans-serif';
+  ctx.fillStyle = '#E68228';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(`${engMonth} ${metadata.year}`, 2650, 425);
+  ctx.restore();
 
-  const chartLeft = 240;
-  const chartRight = 2720;
+  // 3. CHART COLUMNS & BARS LAYOUT ON 3000x1549
+  const chartLeft = 250;
+  const chartRight = 2770;
   const chartWidth = chartRight - chartLeft;
 
   const top10 = items.slice(0, 10);
@@ -721,34 +741,35 @@ function renderChartFormat(
   const colCount = top10.length;
 
   const colGap = chartWidth / colCount;
-  const barWidth = Math.min(colGap * 0.72, 175);
-  const avatarRadius = 85; // Set avatar radius to 85px as requested
-  const barRadius = 24;
-  const wrapWidth = 175; // 175px wrap width for font 32px/30px in 248px column
+  const barWidth = 160;
+  const avatarRadius = 70;
+  const barRadius = 20;
+  const wrapWidth = 175;
 
   // Calculate max lines across 10 items for Chart format
   const maxChartLines = Math.max(
     ...top10.map((item) => {
-      ctx.font = 'bold 32px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 28px "Inter", "Inter", "SVN-Mont", sans-serif';
       return wrapText(ctx, item.name, wrapWidth, 6).length;
     }),
     1
   );
 
-  let chartTop = 565;
-  let chartBottom = 1655;
-  let itemNameFontSize = 32;
-  let lineStepY = 37;
+  let chartTop = 450;
+  let chartBottom = 1265;
+  let itemNameFontSize = 30;
+  let lineStepY = 34;
 
   if (maxChartLines >= 5) {
-    chartTop = 490;
-    chartBottom = 1570; // Co ngắn chiều cao cột & đẩy toàn bộ chart lên trên để nhường không gian cho 5-6 dòng
-    itemNameFontSize = 30; // Giảm xuống 30px (không nhỏ hơn 30px)
-    lineStepY = 34;
+    chartTop = 425;
+    chartBottom = 1205;
+    itemNameFontSize = 26;
+    lineStepY = 30;
   } else if (maxChartLines === 4) {
-    chartBottom = 1618;
-    itemNameFontSize = 32;
-    lineStepY = 37;
+    chartTop = 440;
+    chartBottom = 1235;
+    itemNameFontSize = 28;
+    lineStepY = 32;
   }
 
   const chartHeight = chartBottom - chartTop;
@@ -756,9 +777,9 @@ function renderChartFormat(
   top10.forEach((item, idx) => {
     const centerX = chartLeft + idx * colGap + colGap / 2;
     const scoreRatio = maxScore > 0 ? (item.bsiScore / maxScore) : 0;
-    const maxBarH = chartHeight - avatarRadius * 2 - 60;
+    const maxBarH = chartHeight - avatarRadius * 2 - 50;
     const rawBarH = scoreRatio * maxBarH;
-    const displayBarH = Math.max(rawBarH, 18);
+    const displayBarH = Math.max(rawBarH, 16);
 
     const barX = centerX - barWidth / 2;
     const barY = chartBottom - displayBarH;
@@ -767,31 +788,31 @@ function renderChartFormat(
     drawRoundedRect(ctx, barX, barY, barWidth, displayBarH, { tl: Math.min(barRadius, displayBarH / 2), tr: Math.min(barRadius, displayBarH / 2), br: 0, bl: 0 });
     ctx.fill();
 
-    // 5. SỐ ĐIỂM BSI (Font: Inter 36px)
+    // 4. SỐ ĐIỂM BSI (Font: Inter 32px)
     ctx.save();
-    ctx.font = '800 36px "Inter", "SVN-Mont", sans-serif';
+    ctx.font = '800 32px "Inter", "SVN-Mont", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
     let avatarY: number;
 
-    if (rawBarH >= 87) {
+    if (rawBarH >= 75) {
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
-      ctx.fillText(scoreStr, centerX, barY + displayBarH - 14);
-      avatarY = barY - avatarRadius - 32;
+      ctx.fillText(scoreStr, centerX, barY + displayBarH - 12);
+      avatarY = barY - avatarRadius - 26;
     } else {
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY - 8);
-      avatarY = barY - avatarRadius - 68;
+      avatarY = barY - avatarRadius - 52;
     }
     ctx.restore();
 
     const displayName = item.chartName !== undefined ? item.chartName : item.name;
     drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
-    // 6. TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS (Hỗ trợ 5-6 dòng, font 30px khi 5-6 dòng, đẩy chart lên trên)
+    // 5. TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS
     ctx.font = `bold ${itemNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
     ctx.fillStyle = '#1A1A1A';
     ctx.textAlign = 'center';
@@ -799,7 +820,7 @@ function renderChartFormat(
 
     const lines = wrapText(ctx, displayName, wrapWidth, 6, true);
     lines.forEach((line, lIdx) => {
-      drawTextLineBounded(ctx, line, centerX, chartBottom + 16 + lIdx * lineStepY, colGap - 16, itemNameFontSize);
+      drawTextLineBounded(ctx, line, centerX, chartBottom + 14 + lIdx * lineStepY, colGap - 16, itemNameFontSize);
     });
   });
 }
