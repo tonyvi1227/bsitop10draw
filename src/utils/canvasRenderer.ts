@@ -1452,8 +1452,8 @@ function renderCombinationFormat(
   });
 
   // Bottom Chart Line Trend inside lower frame (lower frame is Y=1986 to 2800 on 3000x3000)
-  const trendTop = isSquareSocial ? 2150 : 1720;
-  const trendBottom = isSquareSocial ? 2650 : 2100;
+  const trendTop = isSquareSocial ? 2170 : 1735;
+  const trendBottom = isSquareSocial ? 2670 : 2115;
   const trendH = trendBottom - trendTop;
 
   const quValues = top10.map((item) => (item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0)));
@@ -1517,8 +1517,8 @@ function renderCombinationFormat(
       }
 
       // Safety bounds check
-      const boundBottomLimit = isSquareSocial ? 2630 : 2080;
-      const boundTopLimit = isSquareSocial ? 2170 : 1740;
+      const boundBottomLimit = isSquareSocial ? 2650 : 2095;
+      const boundTopLimit = isSquareSocial ? 2190 : 1755;
 
       if (pt.visualRatio < 0.15 && !isAbove && pt.y > boundBottomLimit) {
         isAbove = true;
