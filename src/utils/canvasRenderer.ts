@@ -1541,8 +1541,8 @@ function renderCombinationFormat(
       ctx.miterLimit = 2;
       ctx.strokeText(textStr, pt.x, labelY);
 
-      // 2. Crisp Orange Text on top
-      ctx.fillStyle = '#E68228';
+      // 2. Crisp Black Text on top
+      ctx.fillStyle = '#1A1A1A';
       ctx.fillText(textStr, pt.x, labelY);
       ctx.restore();
     });
