@@ -1,5 +1,6 @@
 export type CategoryType = 'CAMPAIGNS' | 'EVENTS' | 'SHOWS' | 'INFLUENCERS';
 export type FormatType = 'CHART' | 'TABLE' | 'COMBINATION';
+export type ComboVariantType = 'DEFAULT' | 'EN' | 'SOCIAL_FB' | 'SOCIAL_LI';
 
 export type ComboMetricType =
   | 'contentFromQu'
@@ -38,4 +39,5 @@ export interface BsiReportMetadata {
   highDpiScale: number; // 2 for High-DPI export
   comboLineMetric?: ComboMetricType;
   comboLineTitle?: string;
+  comboVariant?: ComboVariantType;
 }

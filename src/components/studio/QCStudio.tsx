@@ -13,12 +13,13 @@ import {
   Database,
   Download
 } from 'lucide-react';
-import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
+import { BsiItem, BsiReportMetadata, CategoryType, FormatType, ComboVariantType } from '../../types/bsi';
 import { 
   preloadItemImages, 
   preloadTemplateAssets, 
   renderCanvasReport, 
-  ensureFontsLoaded 
+  ensureFontsLoaded,
+  getReportDimensions
 } from '../../utils/canvasRenderer';
 import { exportAll12ReportsZip } from '../../utils/zipExporter';
 import { saveAs } from 'file-saver';
@@ -44,6 +45,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
 
   const [activeCategory, setActiveCategory] = useState<CategoryType>(metadata.category);
   const [activeFormat, setActiveFormat] = useState<FormatType>(metadata.format);
+  const [activeComboVariant, setActiveComboVariant] = useState<ComboVariantType>(metadata.comboVariant || 'DEFAULT');
   const [zoomScale, setZoomScale] = useState<number>(0.35);
   const [isRendering, setIsRendering] = useState<boolean>(false);
   const [isExportingSingle, setIsExportingSingle] = useState<boolean>(false);
@@ -65,14 +67,19 @@ export const QCStudio: React.FC<QCStudioProps> = ({
     message: '',
   });
 
-  const baseWidth = activeFormat === 'TABLE' ? 4000 : 3000;
-  const baseHeight = activeFormat === 'COMBINATION' ? 2400 : (activeFormat === 'TABLE' ? 2099 : 1549);
+  const { baseWidth, baseHeight } = getReportDimensions({
+    ...metadata,
+    category: activeCategory,
+    format: activeFormat,
+    comboVariant: activeComboVariant,
+  });
 
   // Keep internal state aligned with props
   useEffect(() => {
     setActiveCategory(metadata.category);
     setActiveFormat(metadata.format);
-  }, [metadata.category, metadata.format]);
+    if (metadata.comboVariant) setActiveComboVariant(metadata.comboVariant);
+  }, [metadata.category, metadata.format, metadata.comboVariant]);
 
   // Adjust zoom auto-fit container
   const handleAutoFit = () => {
@@ -102,9 +109,9 @@ export const QCStudio: React.FC<QCStudioProps> = ({
     handleAutoFit();
     window.addEventListener('resize', handleAutoFit);
     return () => window.removeEventListener('resize', handleAutoFit);
-  }, [activeFormat, baseWidth, baseHeight]);
+  }, [activeFormat, activeComboVariant, baseWidth, baseHeight]);
 
-  // Render high-res QC canvas whenever category, format or items change
+  // Render high-res QC canvas whenever category, format, comboVariant or items change
   useEffect(() => {
     let isCancelled = false;
 
@@ -119,6 +126,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
           ...metadata,
           category: activeCategory,
           format: activeFormat,
+          comboVariant: activeComboVariant,
         };
 
         const [templates, loadedImages] = await Promise.all([
@@ -150,7 +158,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
     return () => {
       isCancelled = true;
     };
-  }, [activeCategory, activeFormat, allCategoryItems, items, metadata]);
+  }, [activeCategory, activeFormat, activeComboVariant, allCategoryItems, items, metadata]);
 
   const handleCategoryChange = (cat: CategoryType) => {
     setActiveCategory(cat);
@@ -197,6 +205,7 @@ export const QCStudio: React.FC<QCStudioProps> = ({
         ...metadata,
         category: activeCategory,
         format: activeFormat,
+        comboVariant: activeComboVariant,
         highDpiScale: metadata.highDpiScale || 2,
       };
 
@@ -218,7 +227,8 @@ export const QCStudio: React.FC<QCStudioProps> = ({
       offscreen.toBlob(
         (blob) => {
           if (blob) {
-            const filename = `BSITOP10_${activeCategory}_${activeFormat}_${metadata.month}-${metadata.year}.png`;
+            const variantTag = activeFormat === 'COMBINATION' ? `_${activeComboVariant}` : '';
+            const filename = `BSITOP10_${activeCategory}_${activeFormat}${variantTag}_${metadata.month}-${metadata.year}.png`;
             saveAs(blob, filename);
           }
           setIsExportingSingle(false);
@@ -379,6 +389,35 @@ export const QCStudio: React.FC<QCStudioProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* Combo Variant Selector */}
+            {activeFormat === 'COMBINATION' && (
+              <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800/80">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-buzz-orange shrink-0 w-16">
+                  Phiên bản:
+                </span>
+                <div className="flex-1 grid grid-cols-4 gap-1">
+                  {[
+                    { id: 'DEFAULT', label: 'Chuẩn VN' },
+                    { id: 'EN', label: 'Bản EN' },
+                    { id: 'SOCIAL_FB', label: 'FB 3000' },
+                    { id: 'SOCIAL_LI', label: 'LI 3000' },
+                  ].map(({ id, label }) => (
+                    <button
+                      key={id}
+                      onClick={() => setActiveComboVariant(id as ComboVariantType)}
+                      className={`py-1 px-1 rounded text-[10px] font-bold transition border text-center truncate ${
+                        activeComboVariant === id
+                          ? 'bg-buzz-orange text-white border-buzz-orange shadow-sm'
+                          : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* HIGHLIGHTED LIVE DATA TABLE INSPECTOR */}

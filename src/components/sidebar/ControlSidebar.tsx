@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
+import { BsiItem, BsiReportMetadata, CategoryType, FormatType, ComboVariantType } from '../../types/bsi';
 import { CATEGORY_CONFIG } from '../../constants/branding';
 import { ExcelUpload } from '../upload/ExcelUpload';
 import { BulkImageUpload } from '../upload/BulkImageUpload';
@@ -208,6 +208,41 @@ export const ControlSidebar: React.FC<ControlSidebarProps> = ({
                 ))}
               </div>
             </div>
+
+            {/* 2b. Combo Variant Selection (When format === 'COMBINATION') */}
+            {metadata.format === 'COMBINATION' && (
+              <div className="space-y-2 bg-slate-950 p-3 rounded-xl border border-slate-800">
+                <label className="text-[11px] font-bold uppercase tracking-wider text-buzz-orange flex items-center justify-between">
+                  <span>Phiên bản Combo Chart</span>
+                  <span className="text-[10px] text-slate-400 font-normal">
+                    {metadata.comboVariant === 'SOCIAL_FB' || metadata.comboVariant === 'SOCIAL_LI' ? '3000x3000 (1:1)' : '3000x2400'}
+                  </span>
+                </label>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { id: 'DEFAULT', label: '🇻🇳 Bản Chuẩn (VN)', sub: '3000x2400' },
+                    { id: 'EN', label: '🇬🇧 Tiếng Anh (EN)', sub: '3000x2400' },
+                    { id: 'SOCIAL_FB', label: '📱 Social FB (VN)', sub: '3000x3000 (1:1)' },
+                    { id: 'SOCIAL_LI', label: '💼 Social LI (EN)', sub: '3000x3000 (1:1)' },
+                  ].map(({ id, label, sub }) => (
+                    <button
+                      key={id}
+                      onClick={() => setMetadata((prev) => ({ ...prev, comboVariant: id as ComboVariantType }))}
+                      className={`py-2 px-2 rounded-lg text-xs font-bold transition flex flex-col items-center text-center border ${
+                        (metadata.comboVariant || 'DEFAULT') === id
+                          ? 'bg-buzz-orange text-white border-buzz-orange shadow-md shadow-buzz-orange/20'
+                          : 'bg-slate-900 text-slate-300 border-slate-700/60 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-[11px]">{label}</span>
+                      <span className={`text-[9px] font-mono mt-0.5 ${(metadata.comboVariant || 'DEFAULT') === id ? 'text-white/80' : 'text-slate-500'}`}>
+                        {sub}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* 3. Date Configuration */}
             <div className="space-y-2">

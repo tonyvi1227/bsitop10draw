@@ -1,4 +1,4 @@
-import { BsiItem, BsiReportMetadata } from '../types/bsi';
+import { BsiItem, BsiReportMetadata, CategoryType } from '../types/bsi';
 import { BUZZ_COLORS, CATEGORY_CONFIG } from '../constants/branding';
 import { cleanTextSpaces } from './excelParser';
 
@@ -46,6 +46,21 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
     COMBO_CELEBS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CELEB.png${cacheBuster}`,
     COMBO_SHOWS: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/SHOW.png${cacheBuster}`,
     COMBO_TEMPLATE: `${baseUrl}assets/TABLE TEMPLATE/ChartCombo/CAMP.png${cacheBuster}`,
+    COMBO_EN_CAMPAIGNS: `${baseUrl}assets/ELEMENT COMBO CHART EN/CAMP-EN.png${cacheBuster}`,
+    COMBO_EN_EVENTS: `${baseUrl}assets/ELEMENT COMBO CHART EN/EVENT-EN.png${cacheBuster}`,
+    COMBO_EN_INFLUENCERS: `${baseUrl}assets/ELEMENT COMBO CHART EN/CELEB--EN.png${cacheBuster}`,
+    COMBO_EN_CELEBS: `${baseUrl}assets/ELEMENT COMBO CHART EN/CELEB--EN.png${cacheBuster}`,
+    COMBO_EN_SHOWS: `${baseUrl}assets/ELEMENT COMBO CHART EN/SHOW-EN.png${cacheBuster}`,
+    COMBO_FB_CAMPAIGNS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART FB (Bản VN)/BSITOP10_Chart-Camp-2026-FB.png${cacheBuster}`,
+    COMBO_FB_EVENTS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART FB (Bản VN)/BSITOP10_Chart-Event-2026-FB.png${cacheBuster}`,
+    COMBO_FB_INFLUENCERS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART FB (Bản VN)/BSITOP10_Chart-Celeb-2026-FB.png${cacheBuster}`,
+    COMBO_FB_CELEBS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART FB (Bản VN)/BSITOP10_Chart-Celeb-2026-FB.png${cacheBuster}`,
+    COMBO_FB_SHOWS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART FB (Bản VN)/BSITOP10_Chart-Show-2026-FB.png${cacheBuster}`,
+    COMBO_LI_CAMPAIGNS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART LI (Bản EN)/CAMP.jpg${cacheBuster}`,
+    COMBO_LI_EVENTS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART LI (Bản EN)/EVENT.jpg${cacheBuster}`,
+    COMBO_LI_INFLUENCERS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART LI (Bản EN)/CELEB.jpg${cacheBuster}`,
+    COMBO_LI_CELEBS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART LI (Bản EN)/CELEB.jpg${cacheBuster}`,
+    COMBO_LI_SHOWS: `${baseUrl}assets/ELEMENT COMBO CHART SOCIAL/ELEMENT COMBO CHART LI (Bản EN)/SHOW.jpg${cacheBuster}`,
   };
 
   const promises = Object.entries(assetMap).map(([name, url]) => {
@@ -564,6 +579,22 @@ export const downloadCanvasImage = (canvas: HTMLCanvasElement, filename: string)
   link.click();
 };
 
+/**
+ * Helper to get exact base canvas dimensions for any format & combo variant
+ */
+export function getReportDimensions(metadata: BsiReportMetadata): { baseWidth: number; baseHeight: number } {
+  if (metadata.format === 'TABLE') {
+    return { baseWidth: 4000, baseHeight: 2099 };
+  }
+  if (metadata.format === 'COMBINATION') {
+    if (metadata.comboVariant === 'SOCIAL_FB' || metadata.comboVariant === 'SOCIAL_LI') {
+      return { baseWidth: 3000, baseHeight: 3000 };
+    }
+    return { baseWidth: 3000, baseHeight: 2400 };
+  }
+  return { baseWidth: 3000, baseHeight: 1549 };
+}
+
 export const renderCanvasReport = async (options: RenderOptions): Promise<void> => renderCanvas(options);
 
 /**
@@ -572,16 +603,7 @@ export const renderCanvasReport = async (options: RenderOptions): Promise<void> 
 export const renderCanvas = async (options: RenderOptions): Promise<void> => {
   const { canvas, items, metadata, loadedImages = {}, templateAssets = {}, scale = 1 } = options;
 
-  let baseWidth = 3000;
-  let baseHeight = 1549;
-
-  if (metadata.format === 'TABLE') {
-    baseWidth = 4000;
-    baseHeight = 2099;
-  } else if (metadata.format === 'COMBINATION') {
-    baseWidth = 3000;
-    baseHeight = 2400;
-  }
+  const { baseWidth, baseHeight } = getReportDimensions(metadata);
 
   const renderWidth = baseWidth * scale;
   const renderHeight = baseHeight * scale;
@@ -1038,8 +1060,27 @@ function renderTableFormat(
   });
 }
 
+export const CATEGORY_CONFIG_EN: Record<CategoryType, { titleBadge: string; objectName: string }> = {
+  CAMPAIGNS: {
+    titleBadge: 'BSI TOP10 CAMPAIGNS',
+    objectName: 'CAMPAIGNS',
+  },
+  EVENTS: {
+    titleBadge: 'BSI TOP10 EVENTS',
+    objectName: 'EVENTS',
+  },
+  SHOWS: {
+    titleBadge: 'BSI TOP10 SHOWS',
+    objectName: 'SHOWS',
+  },
+  INFLUENCERS: {
+    titleBadge: 'BSI TOP10 INFLUENCERS',
+    objectName: 'INFLUENCERS',
+  },
+};
+
 /**
- * Render DẠNG 3: BSI TOP10 COMBINATION (TRENDLINE DIRECTLY PLOTS contentFromQu)
+ * Render DẠNG 3: BSI TOP10 COMBINATION (Supports Standard VN 3000x2400, EN 3000x2400, Social FB 3000x3000, Social LI 3000x3000)
  */
 function renderCombinationFormat(
   ctx: CanvasRenderingContext2D,
@@ -1050,69 +1091,133 @@ function renderCombinationFormat(
   loadedImages: Record<number, HTMLImageElement>,
   templateAssets: Record<string, HTMLImageElement>
 ) {
+  const variant = metadata.comboVariant || 'DEFAULT';
+  const isEnglish = variant === 'EN' || variant === 'SOCIAL_LI';
+  const isSquareSocial = variant === 'SOCIAL_FB' || variant === 'SOCIAL_LI';
+
   const catConfig = CATEGORY_CONFIG[metadata.category];
-  const titleText = catConfig.titleBadge;
+  const catConfigEN = CATEGORY_CONFIG_EN[metadata.category];
+  const titleText = isEnglish ? catConfigEN.titleBadge : catConfig.titleBadge;
   const monthStr = metadata.month.padStart(2, '0');
   const engMonth = getEnglishMonth(monthStr);
 
-  const comboKey = `COMBO_${metadata.category}`;
-  const comboImg = templateAssets[comboKey] || templateAssets['COMBO_TEMPLATE'];
+  let prefix = 'COMBO_';
+  if (variant === 'EN') prefix = 'COMBO_EN_';
+  else if (variant === 'SOCIAL_FB') prefix = 'COMBO_FB_';
+  else if (variant === 'SOCIAL_LI') prefix = 'COMBO_LI_';
+
+  const comboKey = `${prefix}${metadata.category}`;
+  let comboImg = templateAssets[comboKey];
+  if (!comboImg) {
+    if (variant === 'EN') comboImg = templateAssets.COMBO_EN_CAMPAIGNS;
+    else if (variant === 'SOCIAL_FB') comboImg = templateAssets.COMBO_FB_CAMPAIGNS;
+    else if (variant === 'SOCIAL_LI') comboImg = templateAssets.COMBO_LI_CAMPAIGNS;
+    else comboImg = templateAssets.COMBO_CAMPAIGNS || templateAssets.COMBO_TEMPLATE;
+  }
+
+  const subLine1Y = isSquareSocial ? 445 : 342;
+  const subLine2Y = isSquareSocial ? 540 : 438;
+
+  let pillRight = 2825;
+  let pillY = 392;
+  let pillFontSize = engMonth.length > 6 ? 30 : 32;
+
+  if (variant === 'EN') {
+    pillRight = 2840;
+    pillY = 390;
+    pillFontSize = engMonth.length > 6 ? 30 : 32;
+  } else if (isSquareSocial) {
+    pillRight = 2880;
+    pillY = 512;
+    pillFontSize = engMonth.length > 6 ? 32 : 36;
+  }
 
   if (comboImg) {
-    ctx.drawImage(comboImg, 0, 0, 3000, 2400);
+    ctx.drawImage(comboImg, 0, 0, width, height);
 
-    // Subtitle Section (center X = 1500) - Tăng 3pt size Dòng 1 font 55px, Dòng 2 font 55px (bằng size dòng 1) + tăng khoảng cách Y=435
+    // Subtitle Section (center X = 1500)
     ctx.save();
     ctx.textBaseline = 'top';
 
-    const subLine1Part1 = '10 ';
-    const subLine1Part2 = `${catConfig.objectName.toUpperCase()}`;
-    const subLine1Part3 = ' NỔI BẬT TRÊN SOCIAL MEDIA';
+    if (isEnglish) {
+      const subLine1Part1 = 'TOP 10 OUTSTANDING ';
+      const subLine1Part2 = `${catConfigEN.objectName}`;
+      const subLine1Part3 = ' ON SOCIAL MEDIA';
 
-    ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
-    const w1 = ctx.measureText(subLine1Part1).width;
-    ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
-    const w2 = ctx.measureText(subLine1Part2).width;
-    ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
-    const w3 = ctx.measureText(subLine1Part3).width;
-    const totalW = w1 + w2 + w3;
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      const w1 = ctx.measureText(subLine1Part1).width;
+      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      const w2 = ctx.measureText(subLine1Part2).width;
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      const w3 = ctx.measureText(subLine1Part3).width;
+      const totalW = w1 + w2 + w3;
 
-    const startX = 1500 - totalW / 2;
-    ctx.textAlign = 'left';
-    ctx.fillStyle = '#1A1A1A';
+      const startX = 1500 - totalW / 2;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#1A1A1A';
 
-    ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
-    ctx.fillText(subLine1Part1, startX, 342);
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part1, startX, subLine1Y);
 
-    ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
-    ctx.fillText(subLine1Part2, startX + w1, 342);
+      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part2, startX + w1, subLine1Y);
 
-    ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
-    ctx.fillText(subLine1Part3, startX + w1 + w2, 342);
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part3, startX + w1 + w2, subLine1Y);
 
-    // Dòng 2: THÁNG MM/YYYY (Tăng 3pt size tiêu đề phụ thành 58px)
-    ctx.textAlign = 'center';
-    ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
-    ctx.fillStyle = '#333333';
-    ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, 1500, 438);
+      // Line 2: MONTH YYYY
+      ctx.textAlign = 'center';
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillStyle = '#333333';
+      ctx.fillText(`${engMonth.toUpperCase()} ${metadata.year}`, 1500, subLine2Y);
+    } else {
+      const subLine1Part1 = '10 ';
+      const subLine1Part2 = `${catConfig.objectName.toUpperCase()}`;
+      const subLine1Part3 = ' NỔI BẬT TRÊN SOCIAL MEDIA';
 
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      const w1 = ctx.measureText(subLine1Part1).width;
+      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      const w2 = ctx.measureText(subLine1Part2).width;
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      const w3 = ctx.measureText(subLine1Part3).width;
+      const totalW = w1 + w2 + w3;
+
+      const startX = 1500 - totalW / 2;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#1A1A1A';
+
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part1, startX, subLine1Y);
+
+      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part2, startX + w1, subLine1Y);
+
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillText(subLine1Part3, startX + w1 + w2, subLine1Y);
+
+      // Line 2: THÁNG MM/YYYY
+      ctx.textAlign = 'center';
+      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.fillStyle = '#333333';
+      ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, 1500, subLine2Y);
+    }
     ctx.restore();
 
-    // Top-Right Logo Badge Month/Year Pill Text (Right-aligned inside white pill at X=2825, Y=392)
+    // Top-Right Logo Badge Month/Year Pill Text (Right-aligned inside white pill at X=pillRight, Y=pillY)
     ctx.save();
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    const pillFontSize = engMonth.length > 6 ? 30 : 32;
     ctx.font = `bold ${pillFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
-    ctx.fillText(`${engMonth} ${metadata.year}`, 2825, 392);
+    ctx.fillText(`${engMonth} ${metadata.year}`, pillRight, pillY);
     ctx.restore();
   } else {
     // Fallback: draw background vector frames programmatically
     const topFrameX = 100;
-    const topFrameY = 250;
+    const topFrameY = isSquareSocial ? 308 : 250;
     const topFrameW = 2765;
-    const topFrameH = 1380;
+    const topFrameH = isSquareSocial ? 1792 : 1380;
     const frameRadius = 60;
     const strokeWidth = 5;
 
@@ -1123,8 +1228,8 @@ function renderCombinationFormat(
     ctx.stroke();
     ctx.restore();
 
-    // Top Frame Left Edge Vertical Text: "BSI - BUZZMETRICS SOCIAL INDEX"
-    const topTextCenterY = 940;
+    // Top Frame Left Edge Vertical Text
+    const topTextCenterY = isSquareSocial ? 1200 : 940;
     const topGapHeight = 580;
 
     ctx.fillStyle = '#FFFFFF';
@@ -1141,11 +1246,11 @@ function renderCombinationFormat(
     ctx.fillText('BSI - BUZZMETRICS SOCIAL INDEX', 0, 0);
     ctx.restore();
 
-    // Bottom Frame Left Edge Vertical Text: "CONTENT FROM QU" & "THẢO LUẬN TỪ NGƯỜI DÙNG CHẤT LƯỢNG"
+    // Bottom Frame Left Edge Vertical Text
     const botFrameX = 100;
-    const botFrameY = 1700;
+    const botFrameY = isSquareSocial ? 1986 : 1700;
     const botFrameW = 2765;
-    const botFrameH = 680;
+    const botFrameH = isSquareSocial ? 814 : 540;
 
     ctx.save();
     ctx.strokeStyle = '#E68228';
@@ -1154,7 +1259,7 @@ function renderCombinationFormat(
     ctx.stroke();
     ctx.restore();
 
-    const botTextCenterY = 2040;
+    const botTextCenterY = isSquareSocial ? 2400 : 1970;
     const botGapHeight = 540;
 
     ctx.fillStyle = '#FFFFFF';
@@ -1172,13 +1277,13 @@ function renderCombinationFormat(
 
     ctx.font = '500 20px "Inter", "Inter", "SVN-Mont", sans-serif';
     ctx.fillStyle = '#E68228';
-    ctx.fillText('THẢO LUẬN TỪ NGƯỜI DÙNG CHẤT LƯỢNG', 0, 16);
+    ctx.fillText(isEnglish ? 'CONTENT FROM QUALIFIED USERS' : 'THẢO LUẬN TỪ NGƯỜI DÙNG CHẤT LƯỢNG', 0, 16);
     ctx.restore();
 
     const badgeW = 1400;
     const badgeH = 160;
     const badgeX = 1480 - badgeW / 2;
-    const badgeY = 170;
+    const badgeY = isSquareSocial ? 230 : 170;
     const badgeRadius = 24;
 
     ctx.save();
@@ -1198,68 +1303,96 @@ function renderCombinationFormat(
     ctx.fillText(titleText, 1480, badgeY + badgeH / 2);
 
     const subX = 1480;
-    const subY = 360;
-
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
     ctx.font = 'bold 39px "Inter", "Inter", "SVN-Mont", sans-serif';
     ctx.fillStyle = '#1A1A1A';
-    ctx.fillText(`10 ${catConfig.objectName} NỔI BẬT TRÊN SOCIAL MEDIA`, subX, subY);
+    if (isEnglish) {
+      ctx.fillText(`TOP 10 OUTSTANDING ${catConfigEN.objectName} ON SOCIAL MEDIA`, subX, subLine1Y);
+      ctx.font = '600 33px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.fillStyle = '#333333';
+      ctx.fillText(`${engMonth.toUpperCase()} ${metadata.year}`, subX, subLine2Y);
+    } else {
+      ctx.fillText(`10 ${catConfig.objectName} NỔI BẬT TRÊN SOCIAL MEDIA`, subX, subLine1Y);
+      ctx.font = '600 33px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.fillStyle = '#333333';
+      ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subLine2Y);
+    }
 
-    ctx.font = '600 33px "Inter", "Inter", "SVN-Mont", sans-serif';
-    ctx.fillStyle = '#333333';
-    ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subY + 48);
-
-    drawTopRightLogo(ctx, width, metadata, templateAssets, { diameter: 410, centerX: 2758, centerY: 350 });
+    drawTopRightLogo(ctx, width, metadata, templateAssets, { diameter: 410, centerX: 2758, centerY: isSquareSocial ? 430 : 350 });
   }
 
-  // Top Chart Bar Ranking Layout (Dynamic chartBottom shrinking to keep font size FIXED at 32px / 30px)
+  // Top Chart Bar Ranking Layout
   const chartLeft = 335;
   const chartRight = 2665;
   const chartW = chartRight - chartLeft;
   const colCount = 10;
   const colGap = chartW / colCount;
-  const barWidth = 163; // +5% larger bar width (163px)
-  const avatarRadius = 84; // +5% larger avatar radius (84px)
+  const barWidth = 163;
+  const avatarRadius = 80;
 
   const top10 = items.slice(0, 10);
   const maxScore = Math.max(...top10.map((i) => i.bsiScore), 100);
 
-  // 1. Calculate max line count across all 10 items using FIXED 32px font size and wrapWidth 165px
-  const wrapWidth = 165; // Cố định 165px cho font 32px/30px để tự động ngắt dòng trong cột 233px
+  const wrapWidth = 165;
   const maxComboLineCount = Math.max(
     ...top10.map((item) => {
       const displayName = item.comboName !== undefined ? item.comboName : item.name;
-      ctx.font = 'bold 32px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 30px "Inter", "Inter", "SVN-Mont", sans-serif';
       return wrapText(ctx, displayName, wrapWidth, 6, true).length;
     }),
     1
   );
 
-  // 2. Adjust chartBottom & font size dynamically:
-  // If 5-6 lines: shrink bar chart height by 110px (chartBottom = 1240px) & font size = 30px
-  // If 4 lines: shrink bar chart height by 74px (chartBottom = 1276px) & font size = 32px
-  // If 3 lines: shrink bar chart height by 37px (chartBottom = 1313px) & font size = 32px
-  // If 1-2 lines: standard chartBottom at 1350px & font size = 32px
-  let chartTop = 510;
-  let chartBottom = 1350;
+  let chartTop = isSquareSocial ? 640 : 490;
+  let chartBottom = isSquareSocial ? 1570 : 1240;
   let comboNameFontSize = 32;
   let comboLineStepY = 37;
 
-  if (maxComboLineCount >= 5) {
-    chartTop = 480;
-    chartBottom = 1240; // Co ngắn chiều cao biểu đồ cột và đẩy chart lên trên để chừa space cho 5-6 dòng
-    comboNameFontSize = 30; // Giảm xuống 30px theo yêu cầu (không nhỏ hơn 30px)
-    comboLineStepY = 34;
-  } else if (maxComboLineCount === 4) {
-    chartBottom = 1276;
-    comboNameFontSize = 32;
-    comboLineStepY = 37;
-  } else if (maxComboLineCount === 3) {
-    chartBottom = 1313;
-    comboNameFontSize = 32;
-    comboLineStepY = 37;
+  if (isSquareSocial) {
+    // 3000x3000 Social FB & Social LI: Bottom frame border is at Y=1842.
+    // We calibrate chartBottom to ensure text never reaches or overlaps 1842.
+    if (maxComboLineCount >= 5) {
+      chartTop = 640;
+      chartBottom = 1500;
+      comboNameFontSize = 28;
+      comboLineStepY = 32;
+    } else if (maxComboLineCount === 4) {
+      chartTop = 640;
+      chartBottom = 1520;
+      comboNameFontSize = 30;
+      comboLineStepY = 34;
+    } else if (maxComboLineCount === 3) {
+      chartTop = 640;
+      chartBottom = 1550;
+      comboNameFontSize = 30;
+      comboLineStepY = 35;
+    } else {
+      chartTop = 640;
+      chartBottom = 1570;
+      comboNameFontSize = 32;
+      comboLineStepY = 37;
+    }
+  } else {
+    if (maxComboLineCount >= 5) {
+      chartTop = 480;
+      chartBottom = 1200;
+      comboNameFontSize = 28;
+      comboLineStepY = 32;
+    } else if (maxComboLineCount === 4) {
+      chartBottom = 1220;
+      comboNameFontSize = 30;
+      comboLineStepY = 34;
+    } else if (maxComboLineCount === 3) {
+      chartBottom = 1250;
+      comboNameFontSize = 30;
+      comboLineStepY = 35;
+    } else {
+      chartBottom = 1270;
+      comboNameFontSize = 32;
+      comboLineStepY = 37;
+    }
   }
 
   const chartH = chartBottom - chartTop;
@@ -1273,7 +1406,7 @@ function renderCombinationFormat(
 
     const displayName = item.comboName !== undefined ? item.comboName : item.name;
     const scoreRatio = maxScore > 0 ? (item.bsiScore / maxScore) : 0;
-    const maxBarH = chartH - avatarRadius * 2 - 60;
+    const maxBarH = chartH - avatarRadius * 2 - 50;
     const rawBarH = scoreRatio * maxBarH;
     const displayBarH = Math.max(rawBarH, 18);
 
@@ -1295,18 +1428,18 @@ function renderCombinationFormat(
       ctx.fillStyle = BUZZ_COLORS.white;
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY + displayBarH - 14);
-      avatarY = barY - avatarRadius - 32;
+      avatarY = barY - avatarRadius - 26;
     } else {
       ctx.fillStyle = '#E68228';
       ctx.textBaseline = 'bottom';
       ctx.fillText(scoreStr, centerX, barY - 8);
-      avatarY = barY - avatarRadius - 68;
+      avatarY = barY - avatarRadius - 58;
     }
     ctx.restore();
 
     drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
-    // TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS (Hỗ trợ 5-6 dòng, font 30px khi 5-6 dòng, đẩy chart lên trên)
+    // TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS
     ctx.font = `bold ${comboNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
     ctx.fillStyle = '#1A1A1A';
     ctx.textAlign = 'center';
@@ -1318,9 +1451,9 @@ function renderCombinationFormat(
     });
   });
 
-  // Bottom Chart Line Trend inside lower frame (Safe bounds: trendTop=1820, trendBottom=2190)
-  const trendTop = 1820;
-  const trendBottom = 2190;
+  // Bottom Chart Line Trend inside lower frame (lower frame is Y=1986 to 2800 on 3000x3000)
+  const trendTop = isSquareSocial ? 2150 : 1720;
+  const trendBottom = isSquareSocial ? 2650 : 2100;
   const trendH = trendBottom - trendTop;
 
   const quValues = top10.map((item) => (item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0)));
@@ -1334,14 +1467,13 @@ function renderCombinationFormat(
     const centerX = columnCentersX[idx] || (chartLeft + idx * colGap + colGap / 2);
     const val = item.comboLineValue !== undefined ? item.comboLineValue : (item.contentFromQu || 0);
     const rawRatio = Math.max(0, Math.min(1, (val - minQu) / rangeQu));
-    // Power scaling (0.65) ensures visual differentiation even when max value is 100x min value
     const visualRatio = Math.pow(rawRatio, 0.65);
     const paddingY = 35;
     const posY = trendBottom - paddingY - visualRatio * (trendH - paddingY * 2);
     nodePoints.push({ x: centerX, y: posY, val, visualRatio });
   });
 
-  // Draw Connected Straight Line Segments (LineWidth 6pt for bolder look (+2pt))
+  // Draw Connected Straight Line Segments
   if (nodePoints.length > 0) {
     ctx.save();
     ctx.beginPath();
@@ -1356,7 +1488,7 @@ function renderCombinationFormat(
     ctx.stroke();
     ctx.restore();
 
-    // Draw Data Nodes (Full Solid Orange Fill #E68228) & Slope-Aware Value Labels with White Halo Mask
+    // Draw Data Nodes & Slope-Aware Value Labels with White Halo Mask
     nodePoints.forEach((pt, i) => {
       ctx.beginPath();
       ctx.arc(pt.x, pt.y, 14, 0, Math.PI * 2);
@@ -1366,38 +1498,31 @@ function renderCombinationFormat(
       const nextPt = nodePoints[i + 1];
       const prevPt = nodePoints[i - 1];
 
-      // Smart geometric open-space label positioning:
       let isAbove = true;
 
       if (nextPt && prevPt) {
-        // Trough/Valley (both adjacent nodes higher): place label BELOW in open valley space
         if (nextPt.y < pt.y - 15 && prevPt.y < pt.y - 15) {
           isAbove = false;
-        }
-        // Downward slope: next node drops to right -> place label ABOVE to clear downward line
-        else if (nextPt.y > pt.y + 15) {
+        } else if (nextPt.y > pt.y + 15) {
           isAbove = true;
-        }
-        // Upward slope: next node goes up to right -> place label BELOW to clear upward line
-        else if (nextPt.y < pt.y - 15) {
+        } else if (nextPt.y < pt.y - 15) {
           isAbove = false;
-        }
-        // Flat/gentle slope -> alternate based on i % 2
-        else {
+        } else {
           isAbove = i % 2 === 0;
         }
       } else if (nextPt) {
-        // First node (Rank 1): if line goes down to right, place label ABOVE; if line goes up, place BELOW
         isAbove = nextPt.y >= pt.y - 10;
       } else if (prevPt) {
-        // Last node (Rank 10): if line came down from left, place label BELOW; if line came up, place ABOVE
         isAbove = prevPt.y <= pt.y + 10;
       }
 
-      // Safety bounds check to avoid frame border collision
-      if (pt.visualRatio < 0.15 && !isAbove && pt.y > 2145) {
+      // Safety bounds check
+      const boundBottomLimit = isSquareSocial ? 2630 : 2080;
+      const boundTopLimit = isSquareSocial ? 2170 : 1740;
+
+      if (pt.visualRatio < 0.15 && !isAbove && pt.y > boundBottomLimit) {
         isAbove = true;
-      } else if (pt.visualRatio > 0.85 && isAbove && pt.y < 1855) {
+      } else if (pt.visualRatio > 0.85 && isAbove && pt.y < boundTopLimit) {
         isAbove = false;
       }
 
@@ -1407,20 +1532,19 @@ function renderCombinationFormat(
       ctx.save();
       ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
       ctx.textAlign = 'center';
-      ctx.textBaseline = isAbove ? 'bottom' : 'top';
+      ctx.textBaseline = 'middle';
 
-      // 1. White stroke halo mask (lineWidth 12px) to wipe out any intersecting line segment behind digits
+      // 1. White Halo Mask
       ctx.strokeStyle = '#FFFFFF';
-      ctx.lineWidth = 12;
+      ctx.lineWidth = 10;
       ctx.lineJoin = 'round';
       ctx.miterLimit = 2;
       ctx.strokeText(textStr, pt.x, labelY);
 
-      // 2. Dark crisp text fill
-      ctx.fillStyle = '#1A1A1A';
+      // 2. Crisp Orange Text on top
+      ctx.fillStyle = '#E68228';
       ctx.fillText(textStr, pt.x, labelY);
       ctx.restore();
     });
   }
 }
-

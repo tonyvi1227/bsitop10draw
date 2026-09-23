@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
-import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../types/bsi';
+import { BsiItem, BsiReportMetadata, CategoryType, FormatType, ComboVariantType } from '../types/bsi';
 import { SAMPLE_DATA } from './sampleData';
 import { preloadItemImages, preloadTemplateAssets, renderCanvasReport } from './canvasRenderer';
 
@@ -8,8 +8,15 @@ interface ExportAllProgressCallback {
   (current: number, total: number, message: string): void;
 }
 
+interface ExportTaskDef {
+  format: FormatType;
+  comboVariant?: ComboVariantType;
+  folderName: string;
+  nameSuffix: string;
+}
+
 /**
- * Generate 12 BSI Top10 PNG images (4 categories x 3 formats) and export as ZIP file
+ * Generate full BSI Top10 PNG images (4 categories x 6 formats/variants = 24 images) and export as organized ZIP
  */
 export async function exportAll12ReportsZip(
   currentMetadata: BsiReportMetadata,
@@ -18,9 +25,16 @@ export async function exportAll12ReportsZip(
   categoryDataStore?: Record<CategoryType, BsiItem[]>
 ): Promise<void> {
   const categories: CategoryType[] = ['CAMPAIGNS', 'EVENTS', 'SHOWS', 'INFLUENCERS'];
-  const formats: FormatType[] = ['CHART', 'TABLE', 'COMBINATION'];
-  const totalTasks = categories.length * formats.length; // 12
+  const tasks: ExportTaskDef[] = [
+    { format: 'CHART', folderName: '1_Chart_Don', nameSuffix: 'Chart' },
+    { format: 'TABLE', folderName: '2_Table_Don', nameSuffix: 'Table' },
+    { format: 'COMBINATION', comboVariant: 'DEFAULT', folderName: '3_Combo_Chuan_VN', nameSuffix: 'Combo_VN' },
+    { format: 'COMBINATION', comboVariant: 'EN', folderName: '4_Combo_English_EN', nameSuffix: 'Combo_EN' },
+    { format: 'COMBINATION', comboVariant: 'SOCIAL_FB', folderName: '5_Combo_Social_FB', nameSuffix: 'Combo_FB' },
+    { format: 'COMBINATION', comboVariant: 'SOCIAL_LI', folderName: '6_Combo_Social_LinkedIn', nameSuffix: 'Combo_LI' },
+  ];
 
+  const totalTasks = categories.length * tasks.length; // 24
   const zip = new JSZip();
   let completedCount = 0;
 
@@ -38,15 +52,15 @@ export async function exportAll12ReportsZip(
     }
     const loadedImages = await preloadItemImages(categoryItems);
 
-    for (let fIdx = 0; fIdx < formats.length; fIdx++) {
-      const format = formats[fIdx];
+    for (let tIdx = 0; tIdx < tasks.length; tIdx++) {
+      const task = tasks[tIdx];
       completedCount++;
 
       if (onProgress) {
         onProgress(
           completedCount,
           totalTasks,
-          `Đang render (${completedCount}/${totalTasks}): ${category} - ${format}...`
+          `Đang render (${completedCount}/${totalTasks}): ${category} - ${task.nameSuffix}...`
         );
       }
 
@@ -54,7 +68,8 @@ export async function exportAll12ReportsZip(
       const taskMetadata: BsiReportMetadata = {
         ...currentMetadata,
         category,
-        format,
+        format: task.format,
+        comboVariant: task.comboVariant,
         highDpiScale: currentMetadata.highDpiScale || 2,
       };
 
@@ -72,23 +87,17 @@ export async function exportAll12ReportsZip(
       });
 
       if (blob) {
-        const folderNameMap: Record<FormatType, string> = {
-          CHART: 'Chart',
-          TABLE: 'Table',
-          COMBINATION: 'Combo',
-        };
-        const folderName = folderNameMap[format];
-        const fileName = `BSI_TOP10_${category}_${folderName}_THANG_${currentMetadata.month}_${currentMetadata.year}.png`;
-        zip.folder(folderName)?.file(fileName, blob);
+        const fileName = `BSI_TOP10_${category}_${task.nameSuffix}_THANG_${currentMetadata.month}_${currentMetadata.year}.png`;
+        zip.folder(task.folderName)?.file(fileName, blob);
       }
     }
   }
 
   if (onProgress) {
-    onProgress(totalTasks, totalTasks, 'Đang nén file ZIP...');
+    onProgress(totalTasks, totalTasks, 'Đang nén trọn bộ file ZIP...');
   }
 
   const zipBlob = await zip.generateAsync({ type: 'blob' });
-  const zipFileName = `BSI_TOP10_Full_12_Reports_Thang_${currentMetadata.month}_${currentMetadata.year}.zip`;
+  const zipFileName = `BSI_TOP10_Full_Reports_Thang_${currentMetadata.month}_${currentMetadata.year}.zip`;
   saveAs(zipBlob, zipFileName);
 }

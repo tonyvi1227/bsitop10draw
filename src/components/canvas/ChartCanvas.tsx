@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { BsiItem, BsiReportMetadata, CategoryType, FormatType } from '../../types/bsi';
-import { preloadItemImages, preloadTemplateAssets, renderCanvasReport, ensureFontsLoaded } from '../../utils/canvasRenderer';
+import { BsiItem, BsiReportMetadata, CategoryType, FormatType, ComboVariantType } from '../../types/bsi';
+import { preloadItemImages, preloadTemplateAssets, renderCanvasReport, ensureFontsLoaded, getReportDimensions } from '../../utils/canvasRenderer';
 import { exportAll12ReportsZip } from '../../utils/zipExporter';
-import { Download, RefreshCw, ZoomIn, ZoomOut, Maximize2, Archive, BarChart3, Table, Layers, SlidersHorizontal, Lightbulb } from 'lucide-react';
+import { Download, RefreshCw, ZoomIn, ZoomOut, Maximize2, Archive, BarChart3, Table, Layers, SlidersHorizontal, Lightbulb, Globe, Share2 } from 'lucide-react';
 import { saveAs } from 'file-saver';
 
 interface ChartCanvasProps {
@@ -29,6 +29,8 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
   const [isLoadingAssets, setIsLoadingAssets] = useState<boolean>(false);
   const [zoomScale, setZoomScale] = useState<number>(0.4);
   const [isExportingSingle, setIsExportingSingle] = useState<boolean>(false);
+
+  const { baseWidth, baseHeight } = getReportDimensions(metadata);
 
   // Bulk ZIP export state
   const [zipProgress, setZipProgress] = useState<{
@@ -70,7 +72,7 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
     return () => {
       isMounted = false;
     };
-  }, [items, metadata.category, metadata.format]);
+  }, [items, metadata.category, metadata.format, metadata.comboVariant]);
 
   // Re-render canvas report on data/metadata/asset change
   useEffect(() => {
@@ -118,7 +120,7 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
     handleAutoFit();
     window.addEventListener('resize', handleAutoFit);
     return () => window.removeEventListener('resize', handleAutoFit);
-  }, [metadata.canvasResolution, metadata.format]);
+  }, [metadata.canvasResolution, metadata.format, metadata.comboVariant, baseWidth, baseHeight]);
 
   // Mouse Handlers for Drag & Pan Preview
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -164,7 +166,8 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
       offscreen.toBlob(
         (blob) => {
           if (blob) {
-            const fileName = `BSI_TOP10_${metadata.category}_${metadata.format}_THANG_${metadata.month}_${metadata.year}.png`;
+            const variantTag = metadata.format === 'COMBINATION' ? `_${metadata.comboVariant || 'DEFAULT'}` : '';
+            const fileName = `BSI_TOP10_${metadata.category}_${metadata.format}${variantTag}_THANG_${metadata.month}_${metadata.year}.png`;
             saveAs(blob, fileName);
           }
           setIsExportingSingle(false);
@@ -210,9 +213,6 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
     }
   };
 
-  const baseWidth = metadata.format === 'TABLE' ? 4000 : 3000;
-  const baseHeight = metadata.format === 'COMBINATION' ? 2400 : (metadata.format === 'TABLE' ? 2099 : 1549);
-
   return (
     <div className="flex flex-col h-full w-full select-none">
       {/* Sleek Floating Graphic Top Toolbar */}
@@ -252,6 +252,30 @@ export const ChartCanvas: React.FC<ChartCanvasProps> = ({
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Combo Variant Selector (when format === 'COMBINATION') */}
+          {setMetadata && metadata.format === 'COMBINATION' && (
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-buzz-orange/40">
+              {[
+                { id: 'DEFAULT', label: '🇻🇳 Chuẩn VN' },
+                { id: 'EN', label: '🇬🇧 EN' },
+                { id: 'SOCIAL_FB', label: '📱 Social FB' },
+                { id: 'SOCIAL_LI', label: '💼 Social LI' },
+              ].map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => setMetadata((prev) => ({ ...prev, comboVariant: id as ComboVariantType }))}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+                    (metadata.comboVariant || 'DEFAULT') === id
+                      ? 'bg-buzz-orange text-white shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  {label}
                 </button>
               ))}
             </div>
