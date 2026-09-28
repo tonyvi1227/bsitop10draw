@@ -20,3 +20,8 @@ Thumbs.db
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Local reference docs
+*.pdf
+BDS_Brand_Tracking_Social_Report.html
+public/assets/TEMPLATE_/

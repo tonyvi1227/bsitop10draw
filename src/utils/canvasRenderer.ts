@@ -99,44 +99,54 @@ export const preloadTemplateAssets = async (forceReload = false): Promise<Record
 };
 
 /**
- * Ensure Inter & SVN fonts are loaded before Canvas rendering
+ * Ensure SVN-Mont & Inter fonts are loaded before Canvas rendering
  */
 export const ensureFontsLoaded = async () => {
   if (typeof document !== 'undefined' && 'fonts' in document) {
     try {
       await Promise.all([
-        document.fonts.load('bold 92px "Inter"'),
-        document.fonts.load('bold 84px "Inter"'),
-        document.fonts.load('bold 72px "Inter"'),
-        document.fonts.load('bold 70px "Inter"'),
-        document.fonts.load('bold 68px "Inter"'),
-        document.fonts.load('bold 58px "Inter"'),
-        document.fonts.load('bold 55px "Inter"'),
-        document.fonts.load('bold 54px "Inter"'),
-        document.fonts.load('bold 52px "Inter"'),
-        document.fonts.load('bold 50px "Inter"'),
-        document.fonts.load('bold 48px "Inter"'),
-        document.fonts.load('bold 46px "Inter"'),
-        document.fonts.load('bold 42px "Inter"'),
-        document.fonts.load('bold 40px "Inter"'),
-        document.fonts.load('bold 39px "Inter"'),
-        document.fonts.load('bold 38px "Inter"'),
-        document.fonts.load('bold 37px "Inter"'),
+        document.fonts.load('bold 92px "SVN-Mont"'),
+        document.fonts.load('bold 84px "SVN-Mont"'),
+        document.fonts.load('bold 72px "SVN-Mont"'),
+        document.fonts.load('bold 70px "SVN-Mont"'),
+        document.fonts.load('bold 68px "SVN-Mont"'),
+        document.fonts.load('bold 58px "SVN-Mont"'),
+        document.fonts.load('bold 55px "SVN-Mont"'),
+        document.fonts.load('bold 54px "SVN-Mont"'),
+        document.fonts.load('bold 52px "SVN-Mont"'),
+        document.fonts.load('bold 50px "SVN-Mont"'),
+        document.fonts.load('bold 48px "SVN-Mont"'),
+        document.fonts.load('bold 46px "SVN-Mont"'),
+        document.fonts.load('bold 44px "SVN-Mont"'),
+        document.fonts.load('bold 42px "SVN-Mont"'),
+        document.fonts.load('bold 40px "SVN-Mont"'),
+        document.fonts.load('bold 39px "SVN-Mont"'),
+        document.fonts.load('bold 38px "SVN-Mont"'),
+        document.fonts.load('bold 37px "SVN-Mont"'),
+        document.fonts.load('bold 36px "SVN-Mont"'),
+        document.fonts.load('bold 35px "SVN-Mont"'),
+        document.fonts.load('bold 34px "SVN-Mont"'),
+        document.fonts.load('bold 32px "SVN-Mont"'),
+        document.fonts.load('bold 30px "SVN-Mont"'),
+        document.fonts.load('bold 28px "SVN-Mont"'),
+        document.fonts.load('bold 27px "SVN-Mont"'),
+        document.fonts.load('bold 24px "SVN-Mont"'),
+        document.fonts.load('900 32px "SVN-Mont"'),
+        document.fonts.load('800 40px "SVN-Mont"'),
+        document.fonts.load('800 37px "SVN-Mont"'),
+        document.fonts.load('800 32px "SVN-Mont"'),
+        document.fonts.load('600 58px "SVN-Mont"'),
+        document.fonts.load('600 55px "SVN-Mont"'),
+        document.fonts.load('600 46px "SVN-Mont"'),
+        document.fonts.load('600 44px "SVN-Mont"'),
+        document.fonts.load('600 37px "SVN-Mont"'),
+        document.fonts.load('600 36px "SVN-Mont"'),
+        document.fonts.load('600 33px "SVN-Mont"'),
+        document.fonts.load('600 24px "SVN-Mont"'),
+        document.fonts.load('500 20px "SVN-Mont"'),
+        document.fonts.load('400 32px "SVN-Mont"'),
         document.fonts.load('bold 36px "Inter"'),
-        document.fonts.load('bold 35px "Inter"'),
-        document.fonts.load('bold 32px "Inter"'),
-        document.fonts.load('bold 30px "Inter"'),
-        document.fonts.load('bold 28px "Inter"'),
-        document.fonts.load('bold 27px "Inter"'),
-        document.fonts.load('900 32px "Inter"'),
-        document.fonts.load('800 40px "Inter"'),
-        document.fonts.load('800 37px "Inter"'),
-        document.fonts.load('800 32px "Inter"'),
-        document.fonts.load('600 58px "Inter"'),
-        document.fonts.load('600 55px "Inter"'),
-        document.fonts.load('600 46px "Inter"'),
-        document.fonts.load('600 37px "Inter"'),
-        document.fonts.load('600 24px "Inter"'),
+        document.fonts.load('600 36px "Inter"'),
       ]);
     } catch (e) {
       console.warn('Font load check:', e);
@@ -315,7 +325,7 @@ function drawTextLineBounded(
   if (metrics.width > maxWidth) {
     ctx.save();
     const scaledSize = Math.max(Math.floor(baseFontSize * (maxWidth / metrics.width)), 16);
-    ctx.font = `bold ${scaledSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${scaledSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText(line, x, y);
     ctx.restore();
   } else {
@@ -371,7 +381,7 @@ function drawAvatar(
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 36px "Inter", "SVN-Jeko", sans-serif';
+    ctx.font = 'bold 36px "SVN-Mont", "SVN-Jeko", "Inter", sans-serif';
     const initial = name.trim().charAt(0).toUpperCase() || `${rank}`;
     ctx.fillText(initial, x, y);
   }
@@ -403,11 +413,11 @@ function drawTableHeaderIcon(ctx: CanvasRenderingContext2D, type: string, x: num
     ctx.fill();
 
     ctx.fillStyle = '#E96825';
-    ctx.font = '900 13px "Inter", "SVN-Jeko", sans-serif';
+    ctx.font = '900 13px "SVN-Mont", "SVN-Jeko", "Inter", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('BSI', x, y - 5);
-    ctx.font = 'bold 8px "Inter", "SVN-Jeko", sans-serif';
+    ctx.font = 'bold 8px "SVN-Mont", "SVN-Jeko", "Inter", sans-serif';
     ctx.fillText('TOP 10', x, y + 6);
   } else if (type === 'buzzVolume') {
     ctx.beginPath();
@@ -505,7 +515,7 @@ function drawTopRightLogo(
 
     // Font size 32px/36px, moved +23px right and +4px down for Chart format
     const pillFontSize = engMonth.length > 6 ? 32 : 36;
-    ctx.font = `bold ${pillFontSize}px "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${pillFontSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText(`${engMonth} ${metadata.year}`, logoX + logoD * 0.72 + 23, centerY + logoD * 0.235 + 4);
     ctx.restore();
   } else {
@@ -519,15 +529,15 @@ function drawTopRightLogo(
     ctx.fill();
 
     ctx.fillStyle = BUZZ_COLORS.white;
-    ctx.font = `bold ${Math.round(logoD * 0.054)}px "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${Math.round(logoD * 0.054)}px "SVN-Mont", "Inter", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('BUZZMETRICS', centerX, centerY - logoD * 0.22);
 
-    ctx.font = `900 ${Math.round(logoD * 0.20)}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `900 ${Math.round(logoD * 0.20)}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText('BSI', centerX, centerY - logoD * 0.07);
 
-    ctx.font = `bold ${Math.round(logoD * 0.088)}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${Math.round(logoD * 0.088)}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText('TOP 10', centerX, centerY + logoD * 0.07);
 
     const pillW = logoD * 0.58;
@@ -540,7 +550,7 @@ function drawTopRightLogo(
     ctx.fill();
 
     ctx.fillStyle = '#E96825';
-    ctx.font = `bold ${Math.round(logoD * 0.063)}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${Math.round(logoD * 0.063)}px "SVN-Mont", "Inter", sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(`${engMonth} ${metadata.year}`, centerX, pillY + pillH / 2);
@@ -675,7 +685,7 @@ function renderChartFormat(
     ctx.save();
     ctx.translate(172, 800);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 36px "SVN-Mont", "Inter", sans-serif';
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -698,7 +708,7 @@ function renderChartFormat(
     ctx.fillStyle = BUZZ_COLORS.white;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 84px "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 84px "SVN-Mont", "Inter", sans-serif';
     ctx.fillText(catConfig.titleBadge, 1500, badgeY + badgeH / 2);
     ctx.restore();
   }
@@ -712,11 +722,11 @@ function renderChartFormat(
   const part3 = ' NỔI BẬT TRÊN SOCIAL MEDIA';
 
   ctx.save();
-  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 44px "SVN-Mont", "Inter", sans-serif';
   const w1 = ctx.measureText(part1).width;
   const w3 = ctx.measureText(part3).width;
 
-  ctx.font = 'bold 44px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 44px "SVN-Mont", "Inter", sans-serif';
   const w2 = ctx.measureText(part2).width;
 
   const totalW = w1 + w2 + w3;
@@ -726,27 +736,27 @@ function renderChartFormat(
   ctx.textBaseline = 'top';
   ctx.fillStyle = '#1A1A1A';
 
-  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 44px "SVN-Mont", "Inter", sans-serif';
   ctx.fillText(part1, startX, subY);
   startX += w1;
 
-  ctx.font = 'bold 44px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 44px "SVN-Mont", "Inter", sans-serif';
   ctx.fillText(part2, startX, subY);
   startX += w2;
 
-  ctx.font = '600 44px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 44px "SVN-Mont", "Inter", sans-serif';
   ctx.fillText(part3, startX, subY);
 
   // Subtitle Dòng 2: THÁNG MM/YYYY (Weight 600, Size 36px)
   ctx.textAlign = 'center';
-  ctx.font = '600 36px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = '600 36px "SVN-Mont", "Inter", sans-serif';
   ctx.fillStyle = '#333333';
   ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subY + 54);
   ctx.restore();
 
   // 2. THỜI GIAN TRÊN LOGO TOP-RIGHT (Sát cạnh phải khoảng trắng của logo: right=2820, centerY=422)
   ctx.save();
-  ctx.font = 'bold 34px "Inter", "SVN-Mont", sans-serif';
+  ctx.font = 'bold 34px "SVN-Mont", "Inter", sans-serif';
   ctx.fillStyle = '#E68228';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
@@ -771,7 +781,7 @@ function renderChartFormat(
   // Calculate max lines across 10 items for Chart format
   const maxChartLines = Math.max(
     ...top10.map((item) => {
-      ctx.font = 'bold 28px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 28px "SVN-Mont", "Inter", sans-serif';
       return wrapText(ctx, item.name, wrapWidth, 6).length;
     }),
     1
@@ -810,9 +820,9 @@ function renderChartFormat(
     drawRoundedRect(ctx, barX, barY, barWidth, displayBarH, { tl: Math.min(barRadius, displayBarH / 2), tr: Math.min(barRadius, displayBarH / 2), br: 0, bl: 0 });
     ctx.fill();
 
-    // 4. SỐ ĐIỂM BSI (Font: Inter 32px)
+    // 4. SỐ ĐIỂM BSI (Font: SVN-Mont 32px)
     ctx.save();
-    ctx.font = '800 32px "Inter", "SVN-Mont", sans-serif';
+    ctx.font = '800 32px "SVN-Mont", "Inter", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
@@ -835,7 +845,7 @@ function renderChartFormat(
     drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
     // 5. TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS
-    ctx.font = `bold ${itemNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${itemNameFontSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillStyle = '#1A1A1A';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -905,7 +915,7 @@ function renderTableFormat(
     // 1. Draw Top-Left Date Badge Text inside the template orange badge slot (SHOWS | JUNE 2026)
     ctx.save();
     ctx.fillStyle = BUZZ_COLORS.white;
-    ctx.font = 'bold 70px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 70px "SVN-Mont", "Inter", sans-serif';
     ctx.textBaseline = 'middle';
 
     // Left part: Category Name right-aligned to X=625
@@ -925,7 +935,7 @@ function renderTableFormat(
     ctx.textBaseline = 'middle';
 
     const pillFontSize = engMonth.length > 6 ? 24 : 26;
-    ctx.font = `bold ${pillFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${pillFontSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText(`${engMonth} ${metadata.year}`, 3863, 249);
     ctx.restore();
   } else {
@@ -948,7 +958,7 @@ function renderTableFormat(
     ctx.fillStyle = BUZZ_COLORS.white;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 52px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 52px "SVN-Mont", "Inter", sans-serif';
     ctx.fillText(
       `${metadata.category}    |    ${engMonth.toUpperCase()} ${metadata.year}`,
       badgeX + badgeW / 2,
@@ -964,7 +974,7 @@ function renderTableFormat(
   const maxItemLinesCount = Math.max(
     ...top10.map((i) => {
       const displayName = i.tableName !== undefined ? i.tableName : i.name;
-      ctx.font = 'bold 36px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 36px "SVN-Mont", "Inter", sans-serif';
       return wrapText(ctx, displayName || '', 690, 4, false).length;
     }),
     1
@@ -994,7 +1004,7 @@ function renderTableFormat(
     if (!templateImg) {
       ctx.save();
       ctx.fillStyle = '#E68228';
-      ctx.font = 'bold 42px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 42px "SVN-Mont", "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(`${item.rank}`, 176.5, rowY);
@@ -1006,7 +1016,7 @@ function renderTableFormat(
       // BRAND column (X = 227 to 677, width = 450px)
       ctx.save();
       ctx.fillStyle = '#1A1A1A';
-      ctx.font = 'bold 36px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 36px "SVN-Mont", "Inter", sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
@@ -1017,7 +1027,7 @@ function renderTableFormat(
       // CAMPAIGNS column (X = 677 to 1437, width = 760px)
       ctx.save();
       ctx.fillStyle = '#1A1A1A';
-      ctx.font = `bold ${uniformCampFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+      ctx.font = `bold ${uniformCampFontSize}px "SVN-Mont", "Inter", sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
@@ -1028,7 +1038,7 @@ function renderTableFormat(
       // Single Name column (EVENTS / SHOWS / INFLUENCERS)
       ctx.save();
       ctx.fillStyle = '#1A1A1A';
-      ctx.font = `bold ${uniformTableFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+      ctx.font = `bold ${uniformTableFontSize}px "SVN-Mont", "Inter", sans-serif`;
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
 
@@ -1039,13 +1049,13 @@ function renderTableFormat(
 
     // 3. Metric Columns (+1pt data text size)
     const metricValues = [
-      { x: 1612.5, val: formatBsiScore(item.bsiScore), font: 'bold 39px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#1A1A1A' },
-      { x: 1968.0, val: formatThousands(item.buzzVolume), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
-      { x: 2328.5, val: formatThousands(item.qualifiedUser), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
-      { x: 2689.5, val: formatThousands(item.contentFromQu), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
-      { x: 3050.5, val: formatIndexScore(item.sentimentScore), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
-      { x: 3412.0, val: formatIndexScore(item.relevanceScore), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
-      { x: 3772.5, val: formatEarnedPercent(item.earnedMedia), font: '600 37px "Inter", "Inter", "SVN-Mont", sans-serif', color: '#333333' },
+      { x: 1612.5, val: formatBsiScore(item.bsiScore), font: 'bold 39px "SVN-Mont", "Inter", sans-serif', color: '#1A1A1A' },
+      { x: 1968.0, val: formatThousands(item.buzzVolume), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
+      { x: 2328.5, val: formatThousands(item.qualifiedUser), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
+      { x: 2689.5, val: formatThousands(item.contentFromQu), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
+      { x: 3050.5, val: formatIndexScore(item.sentimentScore), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
+      { x: 3412.0, val: formatIndexScore(item.relevanceScore), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
+      { x: 3772.5, val: formatEarnedPercent(item.earnedMedia), font: '600 37px "SVN-Mont", "Inter", sans-serif', color: '#333333' },
     ];
 
     metricValues.forEach((col) => {
@@ -1144,11 +1154,11 @@ function renderCombinationFormat(
       const subLine1Part2 = `${catConfigEN.objectName}`;
       const subLine1Part3 = ' ON SOCIAL MEDIA';
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       const w1 = ctx.measureText(subLine1Part1).width;
-      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 58px "SVN-Mont", "Inter", sans-serif';
       const w2 = ctx.measureText(subLine1Part2).width;
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       const w3 = ctx.measureText(subLine1Part3).width;
       const totalW = w1 + w2 + w3;
 
@@ -1156,18 +1166,18 @@ function renderCombinationFormat(
       ctx.textAlign = 'left';
       ctx.fillStyle = '#1A1A1A';
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part1, startX, subLine1Y);
 
-      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part2, startX + w1, subLine1Y);
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part3, startX + w1 + w2, subLine1Y);
 
       // Line 2: MONTH YYYY
       ctx.textAlign = 'center';
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillStyle = '#333333';
       ctx.fillText(`${engMonth.toUpperCase()} ${metadata.year}`, 1500, subLine2Y);
     } else {
@@ -1175,11 +1185,11 @@ function renderCombinationFormat(
       const subLine1Part2 = `${catConfig.objectName.toUpperCase()}`;
       const subLine1Part3 = ' NỔI BẬT TRÊN SOCIAL MEDIA';
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       const w1 = ctx.measureText(subLine1Part1).width;
-      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 58px "SVN-Mont", "Inter", sans-serif';
       const w2 = ctx.measureText(subLine1Part2).width;
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       const w3 = ctx.measureText(subLine1Part3).width;
       const totalW = w1 + w2 + w3;
 
@@ -1187,18 +1197,18 @@ function renderCombinationFormat(
       ctx.textAlign = 'left';
       ctx.fillStyle = '#1A1A1A';
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part1, startX, subLine1Y);
 
-      ctx.font = 'bold 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part2, startX + w1, subLine1Y);
 
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillText(subLine1Part3, startX + w1 + w2, subLine1Y);
 
       // Line 2: THÁNG MM/YYYY
       ctx.textAlign = 'center';
-      ctx.font = '600 58px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 58px "SVN-Mont", "Inter", sans-serif';
       ctx.fillStyle = '#333333';
       ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, 1500, subLine2Y);
     }
@@ -1209,7 +1219,7 @@ function renderCombinationFormat(
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
-    ctx.font = `bold ${pillFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${pillFontSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillText(`${engMonth} ${metadata.year}`, pillRight, pillY);
     ctx.restore();
   } else {
@@ -1238,7 +1248,7 @@ function renderCombinationFormat(
     ctx.save();
     ctx.translate(topFrameX, topTextCenterY);
     ctx.rotate(-Math.PI / 2);
-    ctx.font = 'bold 24px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 24px "SVN-Mont", "Inter", sans-serif';
     ctx.fillStyle = '#E68228';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1271,11 +1281,11 @@ function renderCombinationFormat(
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.font = 'bold 24px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 24px "SVN-Mont", "Inter", sans-serif';
     ctx.fillStyle = '#E68228';
     ctx.fillText('CONTENT FROM QU', 0, -14);
 
-    ctx.font = '500 20px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = '500 20px "SVN-Mont", "Inter", sans-serif';
     ctx.fillStyle = '#E68228';
     ctx.fillText(isEnglish ? 'CONTENT FROM QUALIFIED USERS' : 'THẢO LUẬN TỪ NGƯỜI DÙNG CHẤT LƯỢNG', 0, 16);
     ctx.restore();
@@ -1299,23 +1309,23 @@ function renderCombinationFormat(
     ctx.fillStyle = BUZZ_COLORS.white;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'bold 50px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 50px "SVN-Mont", "Inter", sans-serif';
     ctx.fillText(titleText, 1480, badgeY + badgeH / 2);
 
     const subX = 1480;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
 
-    ctx.font = 'bold 39px "Inter", "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 39px "SVN-Mont", "Inter", sans-serif';
     ctx.fillStyle = '#1A1A1A';
     if (isEnglish) {
       ctx.fillText(`TOP 10 OUTSTANDING ${catConfigEN.objectName} ON SOCIAL MEDIA`, subX, subLine1Y);
-      ctx.font = '600 33px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 33px "SVN-Mont", "Inter", sans-serif';
       ctx.fillStyle = '#333333';
       ctx.fillText(`${engMonth.toUpperCase()} ${metadata.year}`, subX, subLine2Y);
     } else {
       ctx.fillText(`10 ${catConfig.objectName} NỔI BẬT TRÊN SOCIAL MEDIA`, subX, subLine1Y);
-      ctx.font = '600 33px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = '600 33px "SVN-Mont", "Inter", sans-serif';
       ctx.fillStyle = '#333333';
       ctx.fillText(`THÁNG ${monthStr}/${metadata.year}`, subX, subLine2Y);
     }
@@ -1335,63 +1345,63 @@ function renderCombinationFormat(
   const top10 = items.slice(0, 10);
   const maxScore = Math.max(...top10.map((i) => i.bsiScore), 100);
 
-  const wrapWidth = 165;
+  const wrapWidth = 170;
   const maxComboLineCount = Math.max(
     ...top10.map((item) => {
       const displayName = item.comboName !== undefined ? item.comboName : item.name;
-      ctx.font = 'bold 30px "Inter", "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 32px "SVN-Mont", "Inter", sans-serif';
       return wrapText(ctx, displayName, wrapWidth, 6, true).length;
     }),
     1
   );
 
   let chartTop = isSquareSocial ? 640 : 490;
-  let chartBottom = isSquareSocial ? 1570 : 1240;
-  let comboNameFontSize = 32;
-  let comboLineStepY = 37;
+  let chartBottom = isSquareSocial ? 1565 : 1240;
+  let comboNameFontSize = 34;
+  let comboLineStepY = 39;
 
   if (isSquareSocial) {
     // 3000x3000 Social FB & Social LI: Bottom frame border is at Y=1842.
     // We calibrate chartBottom to ensure text never reaches or overlaps 1842.
     if (maxComboLineCount >= 5) {
       chartTop = 640;
-      chartBottom = 1500;
-      comboNameFontSize = 28;
-      comboLineStepY = 32;
-    } else if (maxComboLineCount === 4) {
-      chartTop = 640;
-      chartBottom = 1520;
+      chartBottom = 1490;
       comboNameFontSize = 30;
       comboLineStepY = 34;
+    } else if (maxComboLineCount === 4) {
+      chartTop = 640;
+      chartBottom = 1515;
+      comboNameFontSize = 32;
+      comboLineStepY = 36;
     } else if (maxComboLineCount === 3) {
       chartTop = 640;
-      chartBottom = 1550;
-      comboNameFontSize = 30;
-      comboLineStepY = 35;
-    } else {
-      chartTop = 640;
-      chartBottom = 1570;
+      chartBottom = 1545;
       comboNameFontSize = 32;
       comboLineStepY = 37;
+    } else {
+      chartTop = 640;
+      chartBottom = 1565;
+      comboNameFontSize = 34;
+      comboLineStepY = 39;
     }
   } else {
     if (maxComboLineCount >= 5) {
       chartTop = 480;
-      chartBottom = 1200;
-      comboNameFontSize = 28;
-      comboLineStepY = 32;
-    } else if (maxComboLineCount === 4) {
-      chartBottom = 1220;
+      chartBottom = 1190;
       comboNameFontSize = 30;
       comboLineStepY = 34;
+    } else if (maxComboLineCount === 4) {
+      chartBottom = 1215;
+      comboNameFontSize = 32;
+      comboLineStepY = 36;
     } else if (maxComboLineCount === 3) {
-      chartBottom = 1250;
-      comboNameFontSize = 30;
-      comboLineStepY = 35;
-    } else {
-      chartBottom = 1270;
+      chartBottom = 1245;
       comboNameFontSize = 32;
       comboLineStepY = 37;
+    } else {
+      chartBottom = 1265;
+      comboNameFontSize = 34;
+      comboLineStepY = 39;
     }
   }
 
@@ -1418,7 +1428,7 @@ function renderCombinationFormat(
     ctx.fill();
 
     ctx.save();
-    ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
+    ctx.font = 'bold 36px "SVN-Mont", "Inter", sans-serif';
     ctx.textAlign = 'center';
 
     const scoreStr = formatBsiScore(item.bsiScore);
@@ -1440,7 +1450,7 @@ function renderCombinationFormat(
     drawAvatar(ctx, loadedImages[item.rank], centerX, avatarY, avatarRadius, item.rank, displayName);
 
     // TÊN CAMPAIGNS / EVENTS / SHOWS / CELEBS
-    ctx.font = `bold ${comboNameFontSize}px "Inter", "Inter", "SVN-Mont", sans-serif`;
+    ctx.font = `bold ${comboNameFontSize}px "SVN-Mont", "Inter", sans-serif`;
     ctx.fillStyle = '#1A1A1A';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -1530,7 +1540,7 @@ function renderCombinationFormat(
       const textStr = formatThousands(pt.val);
 
       ctx.save();
-      ctx.font = 'bold 36px "Inter", "SVN-Mont", sans-serif';
+      ctx.font = 'bold 36px "SVN-Mont", "Inter", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
